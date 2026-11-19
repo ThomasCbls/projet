@@ -1,9 +1,12 @@
 "use client";
 
+import CloudSyncOutlined from "@mui/icons-material/CloudSyncOutlined";
 import DeleteForeverOutlined from "@mui/icons-material/DeleteForeverOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 import InstallMobileOutlined from "@mui/icons-material/InstallMobileOutlined";
+import LoginRounded from "@mui/icons-material/LoginRounded";
+import LogoutRounded from "@mui/icons-material/LogoutRounded";
 import IosShareRounded from "@mui/icons-material/IosShareRounded";
 import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import Alert from "@mui/material/Alert";
@@ -18,11 +21,13 @@ import Grid from "@mui/material/Grid";
 import Snackbar from "@mui/material/Snackbar";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { ChoixTheme } from "@/components/Theme";
 import { Chargement, EnTetePage, Section } from "@/components/ui";
 import { useDonnees } from "@/hooks/useDonnees";
 import { installer, useInstallation } from "@/hooks/useInstallation";
+import { useSession } from "@/hooks/useSession";
 import { aujourdhuiIso, estDansPeriode, estDateIso, finPeriode, joursActifs } from "@/lib/dates";
 import { formatDateCourte } from "@/lib/format";
 import { ErreurImport, exporterJSON, importerJSON } from "@/lib/storage";
@@ -93,8 +98,87 @@ function SectionApplication({ siInstallee }: { siInstallee: () => void }) {
   );
 }
 
+const TEXTE_SYNCHRO = {
+  inactive: "",
+  "en-cours": "Synchronisation en cours…",
+  "a-jour": "À jour",
+  "hors-ligne": "Hors ligne : les modifications seront envoyées au retour de la connexion",
+} as const;
+
+/** Compte et synchronisation entre appareils. */
+function SectionCompte({ siMessage }: { siMessage: (m: { type: "success" | "error"; texte: string }) => void }) {
+  const { disponible, pret, utilisateur } = useSession();
+  const { synchro, derniereSynchro, synchroniser, deconnecter } = useDonnees();
+  const [deconnexion, setDeconnexion] = useState(false);
+
+  if (!disponible || !pret) return null;
+
+  return (
+    <Section titre="Compte et synchronisation">
+      {utilisateur ? (
+        <>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            Connecté avec <strong>{utilisateur.email}</strong>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, ...texteSecondaire }}>
+            {TEXTE_SYNCHRO[synchro] && (
+              <>
+                {TEXTE_SYNCHRO[synchro]}
+                {synchro === "a-jour" &&
+                  derniereSynchro &&
+                  ` (${derniereSynchro.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })})`}
+                .{" "}
+              </>
+            )}
+            La déconnexion efface les données de cet appareil ; elles restent sur votre compte.
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+            <Button
+              variant="contained"
+              startIcon={<CloudSyncOutlined />}
+              loading={synchro === "en-cours"}
+              onClick={() => void synchroniser()}
+            >
+              Synchroniser maintenant
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<LogoutRounded />}
+              loading={deconnexion}
+              onClick={async () => {
+                setDeconnexion(true);
+                try {
+                  await deconnecter();
+                  siMessage({ type: "success", texte: "Déconnecté." });
+                } catch (err) {
+                  siMessage({ type: "error", texte: err instanceof Error ? err.message : "Déconnexion impossible." });
+                } finally {
+                  setDeconnexion(false);
+                }
+              }}
+            >
+              Se déconnecter
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <>
+          <Typography variant="body2" sx={{ mb: 2, ...texteSecondaire }}>
+            Connectez-vous pour retrouver vos saisies sur tous vos appareils (téléphone, ordinateur…). Les jours déjà
+            saisis ici sont conservés et ajoutés à votre compte.
+          </Typography>
+          <Button component={Link} href="/connexion" variant="contained" startIcon={<LoginRounded />}>
+            Se connecter
+          </Button>
+        </>
+      )}
+    </Section>
+  );
+}
+
 export default function PageReglages() {
   const { data, setDateDebut, remplacer, reinitialiser } = useDonnees();
+  const { utilisateur } = useSession();
   const fichier = useRef<HTMLInputElement>(null);
   const [importEnAttente, setImportEnAttente] = useState<AppData | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; texte: string } | null>(null);
@@ -156,11 +240,15 @@ export default function PageReglages() {
         </Grid>
 
         <Grid size={{ xs: 12, lg: 6 }}>
+          <SectionCompte siMessage={setMessage} />
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Section titre="Sauvegarde des données">
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-              Les données sont enregistrées dans ce navigateur uniquement ({pluriel(nbJoursSaisis, "jour")} saisi
-              {nbJoursSaisis > 1 ? "s" : ""}). Exportez-les régulièrement pour les sauvegarder ou les transférer sur un
-              autre appareil.
+              {utilisateur
+                ? `Les données (${pluriel(nbJoursSaisis, "jour")} saisi${nbJoursSaisis > 1 ? "s" : ""}) sont enregistrées sur cet appareil et sur votre compte. L'export JSON reste utile comme copie de sécurité.`
+                : `Les données sont enregistrées dans ce navigateur uniquement (${pluriel(nbJoursSaisis, "jour")} saisi${nbJoursSaisis > 1 ? "s" : ""}). Exportez-les régulièrement pour les sauvegarder ou les transférer sur un autre appareil.`}
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
               <Button
@@ -196,7 +284,8 @@ export default function PageReglages() {
         <Grid size={{ xs: 12, lg: 6 }}>
           <Section titre="Réinitialiser">
             <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-              Efface toutes les saisies de ce navigateur et remet la date de début par défaut. Pensez à exporter avant.
+              Efface toutes les saisies {utilisateur ? "de votre compte, sur tous vos appareils," : "de ce navigateur"} et
+              remet la date de début par défaut. Pensez à exporter avant.
             </Typography>
             <Button variant="outlined" color="error" startIcon={<DeleteForeverOutlined />} onClick={() => setConfirmerReset(true)}>
               Réinitialiser les données…
@@ -233,7 +322,10 @@ export default function PageReglages() {
       <Dialog open={confirmerReset} onClose={() => setConfirmerReset(false)} aria-labelledby="titre-reset">
         <DialogTitle id="titre-reset">Supprimer définitivement {pluriel(nbJoursSaisis, "jour")} de saisie ?</DialogTitle>
         <DialogContent>
-          <DialogContentText>Cette action est irréversible. Pensez à exporter vos données avant.</DialogContentText>
+          <DialogContentText>
+            Cette action est irréversible{utilisateur ? " et s'applique à tous vos appareils synchronisés" : ""}. Pensez à
+            exporter vos données avant.
+          </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setConfirmerReset(false)} autoFocus>

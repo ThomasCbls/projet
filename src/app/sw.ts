@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import { NetworkOnly, Serwist } from "serwist";
 
 // Service worker de la PWA, compilé par @serwist/next vers public/sw.js (production uniquement).
 
@@ -24,7 +24,15 @@ const serwist = new Serwist({
   skipWaiting: false,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [
+    // Base de données et comptes (Supabase) : jamais de réponse en cache, toujours le réseau.
+    {
+      matcher: ({ url }) =>
+        url.hostname.endsWith(".supabase.co") || /^\/(rest|auth|realtime)\/v1\//.test(url.pathname),
+      handler: new NetworkOnly(),
+    },
+    ...defaultCache,
+  ],
 });
 
 serwist.addEventListeners();
