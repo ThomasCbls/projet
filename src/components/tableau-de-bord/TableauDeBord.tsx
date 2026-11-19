@@ -119,7 +119,7 @@ export function TableauDeBord() {
       {t.joursSaisis === 0 && (
         <Alert severity="info" sx={{ mb: 3 }}>
           Aucune saisie pour l&apos;instant. Renseignez vos matchs et vos paris dans <strong>Saisie du jour</strong> :
-          les statistiques et les graphiques se rempliront d'eux-mêmes.
+          les statistiques et les graphiques se rempliront d&apos;eux-mêmes.
         </Alert>
       )}
 
