@@ -27,6 +27,7 @@ import { useDonnees } from "@/hooks/useDonnees";
 import { finPeriode } from "@/lib/dates";
 import { formatDateCourte } from "@/lib/format";
 import { IndicateurSauvegarde } from "./IndicateurSauvegarde";
+import { ProgressionNavigation } from "./ProgressionNavigation";
 import { BoutonTheme } from "./Theme";
 
 const LARGEUR_MENU = 248;
@@ -132,6 +133,7 @@ export function Coque({ children }: { children: React.ReactNode }) {
                 color={chemin.startsWith("/reglages") ? "primary" : "default"}
               >
                 <SettingsRounded />
+                <ProgressionNavigation />
               </IconButton>
             </Tooltip>
           </Box>
@@ -171,6 +173,7 @@ export function Coque({ children }: { children: React.ReactNode }) {
                     <Icone />
                   </ListItemIcon>
                   <ListItemText primary={libelle} slotProps={{ primary: { sx: { fontWeight: actif ? 700 : 500 } } }} />
+                  <ProgressionNavigation />
                 </ListItemButton>
               );
             })}
@@ -217,7 +220,12 @@ export function Coque({ children }: { children: React.ReactNode }) {
               key={href}
               value={href}
               label={court}
-              icon={<Icone />}
+              icon={
+                <>
+                  <Icone />
+                  <ProgressionNavigation />
+                </>
+              }
               component={Link}
               href={href}
               aria-current={actuel?.href === href ? "page" : undefined}
