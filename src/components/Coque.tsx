@@ -28,9 +28,16 @@ import { finPeriode } from "@/lib/dates";
 import { formatDateCourte } from "@/lib/format";
 import { IndicateurSauvegarde } from "./IndicateurSauvegarde";
 import { ProgressionNavigation } from "./ProgressionNavigation";
+import { Pwa } from "./Pwa";
 import { BoutonTheme } from "./Theme";
 
 const LARGEUR_MENU = 248;
+
+/** Marges de sécurité (encoche, coins arrondis) quand l'application occupe tout l'écran. */
+const margesLaterales = {
+  pl: "env(safe-area-inset-left)",
+  pr: "env(safe-area-inset-right)",
+} as const;
 
 const LIENS = [
   { href: "/", libelle: "Tableau de bord", court: "Accueil", Icone: DashboardRounded, mobile: true },
@@ -84,7 +91,8 @@ export function Coque({ children }: { children: React.ReactNode }) {
   const actuel = LIENS.find((l) => estActif(chemin, l.href));
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100dvh" }}>
+    <Box sx={{ display: "flex", minHeight: "100dvh", ...margesLaterales }}>
+      <Pwa />
       <Box
         component="a"
         href="#contenu"
@@ -112,6 +120,8 @@ export function Coque({ children }: { children: React.ReactNode }) {
           borderBottom: 1,
           borderColor: "divider",
           bgcolor: "background.paper",
+          pt: "env(safe-area-inset-top)",
+          ...margesLaterales,
         }}
       >
         <Toolbar sx={{ gap: 1 }}>
@@ -190,8 +200,8 @@ export function Coque({ children }: { children: React.ReactNode }) {
           flexGrow: 1,
           minWidth: 0,
           px: { xs: 2, sm: 3, lg: 4 },
-          pt: { xs: 10, sm: 11 },
-          pb: { xs: 13, md: 6 },
+          pt: { xs: "calc(80px + env(safe-area-inset-top))", sm: "calc(88px + env(safe-area-inset-top))" },
+          pb: { xs: "calc(104px + env(safe-area-inset-bottom))", md: 6 },
           outline: "none",
         }}
       >
@@ -212,6 +222,7 @@ export function Coque({ children }: { children: React.ReactNode }) {
           borderTop: 1,
           borderColor: "divider",
           pb: "env(safe-area-inset-bottom)",
+          ...margesLaterales,
         }}
       >
         <BottomNavigation showLabels value={actuel?.mobile ? actuel.href : false} sx={{ height: 64 }}>

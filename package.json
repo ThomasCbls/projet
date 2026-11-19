@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "import-excel": "node scripts/import-excel.mjs"
+    "import-excel": "node scripts/import-excel.mjs",
+    "icones": "node scripts/generer-icones.mjs"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -19,6 +20,7 @@
     "@mui/material": "^9.5.0",
     "@mui/material-nextjs": "^9.5.0",
     "@mui/x-charts": "^9.18.1",
+    "@serwist/next": "^9.5.15",
     "next": "15.5.29",
     "react": "19.1.0",
     "react-dom": "19.1.0"
@@ -31,6 +33,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.29",
     "fflate": "^0.8.2",
+    "serwist": "^9.5.15",
+    "sharp": "^0.35.5",
     "typescript": "^5",
     "vitest": "^3.2.4"
   },

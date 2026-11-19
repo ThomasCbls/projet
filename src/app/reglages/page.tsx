@@ -3,6 +3,9 @@
 import DeleteForeverOutlined from "@mui/icons-material/DeleteForeverOutlined";
 import FileDownloadOutlined from "@mui/icons-material/FileDownloadOutlined";
 import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
+import InstallMobileOutlined from "@mui/icons-material/InstallMobileOutlined";
+import IosShareRounded from "@mui/icons-material/IosShareRounded";
+import TaskAltRounded from "@mui/icons-material/TaskAltRounded";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -19,6 +22,7 @@ import { useRef, useState } from "react";
 import { ChoixTheme } from "@/components/Theme";
 import { Chargement, EnTetePage, Section } from "@/components/ui";
 import { useDonnees } from "@/hooks/useDonnees";
+import { installer, useInstallation } from "@/hooks/useInstallation";
 import { aujourdhuiIso, estDansPeriode, estDateIso, finPeriode, joursActifs } from "@/lib/dates";
 import { formatDateCourte } from "@/lib/format";
 import { ErreurImport, exporterJSON, importerJSON } from "@/lib/storage";
@@ -36,6 +40,58 @@ function telecharger(nom: string, contenu: string) {
 }
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+
+const texteSecondaire = { color: "text.secondary" } as const;
+
+/** Installation de la PWA : bouton (Chrome, Edge, Android) ou marche à suivre (iPhone, iPad). */
+function SectionApplication({ siInstallee }: { siInstallee: () => void }) {
+  const etat = useInstallation();
+  return (
+    <Section titre="Application">
+      {etat === "installee" ? (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <TaskAltRounded color="success" />
+          <Typography variant="body2">
+            L&apos;application est installée sur cet appareil. Elle s&apos;ouvre en plein écran et fonctionne sans
+            connexion.
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          <Typography variant="body2" sx={{ mb: 2, ...texteSecondaire }}>
+            Installez l&apos;application pour l&apos;ouvrir depuis l&apos;écran d&apos;accueil ou le menu Démarrer, en
+            plein écran. Elle fonctionne aussi sans connexion.
+          </Typography>
+          {etat === "disponible" && (
+            <Button
+              variant="contained"
+              startIcon={<InstallMobileOutlined />}
+              onClick={async () => {
+                if (await installer()) siInstallee();
+              }}
+            >
+              Installer l&apos;application
+            </Button>
+          )}
+          {etat === "ios" && (
+            <Typography variant="body2">
+              Dans Safari, touchez{" "}
+              <IosShareRounded fontSize="small" titleAccess="Partager" sx={{ verticalAlign: "text-bottom" }} />{" "}
+              <strong>Partager</strong>, puis <strong>Sur l&apos;écran d&apos;accueil</strong>.
+            </Typography>
+          )}
+          {etat === "indisponible" && (
+            <Typography variant="body2">
+              Utilisez le menu du navigateur (<strong>Installer l&apos;application</strong> ou{" "}
+              <strong>Ajouter à l&apos;écran d&apos;accueil</strong>), ou ouvrez cette page dans Chrome, Edge ou
+              Safari.
+            </Typography>
+          )}
+        </>
+      )}
+    </Section>
+  );
+}
 
 export default function PageReglages() {
   const { data, setDateDebut, remplacer, reinitialiser } = useDonnees();
@@ -131,6 +187,10 @@ export default function PageReglages() {
               />
             </Box>
           </Section>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <SectionApplication siInstallee={() => setMessage({ type: "success", texte: "Application installée." })} />
         </Grid>
 
         <Grid size={{ xs: 12, lg: 6 }}>

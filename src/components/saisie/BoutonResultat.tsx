@@ -1,14 +1,35 @@
 "use client";
 
 import ButtonBase from "@mui/material/ButtonBase";
+import { styled } from "@mui/material/styles";
+import { memo } from "react";
 import type { Resultat } from "@/lib/types";
 import { FOND_GAGNE, FOND_PERDU } from "@/theme/constantes";
 
 const SUIVANT: Record<Resultat, Resultat> = { "": "G", G: "P", P: "" };
 const LIBELLE: Record<Resultat, string> = { "": "vide", G: "gagné", P: "perdu" };
 
+/** Styles calculés une seule fois pour les 40 cases ; l'état passe par `data-resultat`. */
+const Case = styled(ButtonBase)(({ theme }) => ({
+  flex: 1,
+  minWidth: 44,
+  height: 48,
+  borderRadius: theme.shape.borderRadius,
+  fontSize: "1.1rem",
+  fontWeight: 700,
+  userSelect: "none",
+  border: "2px dashed",
+  borderColor: (theme.vars ?? theme).palette.divider,
+  color: (theme.vars ?? theme).palette.text.secondary,
+  transition: "background-color 120ms, transform 80ms",
+  "&:active": { transform: "scale(0.95)" },
+  "&:hover": { borderColor: (theme.vars ?? theme).palette.text.secondary },
+  '&[data-resultat="G"]': { backgroundColor: FOND_GAGNE, borderColor: FOND_GAGNE, borderStyle: "solid", color: "#fff" },
+  '&[data-resultat="P"]': { backgroundColor: FOND_PERDU, borderColor: FOND_PERDU, borderStyle: "solid", color: "#fff" },
+}));
+
 /** Case de match : vide → G (vert) → P (rouge) → vide. */
-export function BoutonResultat({
+export const BoutonResultat = memo(function BoutonResultat({
   valeur,
   onChange,
   libelle,
@@ -18,34 +39,14 @@ export function BoutonResultat({
   /** Ex. « Foot, match 3 » */
   libelle: string;
 }) {
-  const fond = valeur === "G" ? FOND_GAGNE : valeur === "P" ? FOND_PERDU : undefined;
   return (
-    <ButtonBase
+    <Case
       focusRipple
+      data-resultat={valeur}
       onClick={() => onChange(SUIVANT[valeur])}
       aria-label={`${libelle} : ${LIBELLE[valeur]}. Toucher pour passer à ${LIBELLE[SUIVANT[valeur]]}`}
-      sx={{
-        flex: 1,
-        minWidth: 44,
-        height: 48,
-        borderRadius: 1,
-        fontSize: "1.1rem",
-        fontWeight: 700,
-        userSelect: "none",
-        transition: "background-color 120ms, transform 80ms",
-        "&:active": { transform: "scale(0.95)" },
-        ...(fond
-          ? { bgcolor: fond, color: "#fff", border: 2, borderColor: fond }
-          : {
-              color: "text.secondary",
-              border: 2,
-              borderStyle: "dashed",
-              borderColor: "divider",
-              "&:hover": { borderColor: "text.secondary" },
-            }),
-      }}
     >
       {valeur || <span aria-hidden="true">·</span>}
-    </ButtonBase>
+    </Case>
   );
-}
+});

@@ -6,7 +6,6 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import Tooltip from "@mui/material/Tooltip";
 import type { CelluleSport, LigneBilan, MatriceSportMois as Matrice } from "@/lib/calculs";
 import { formatEuro, formatMoisCourt, formatMoisLong, formatPct } from "@/lib/format";
 import { DefilementTableau, Montant, celluleFigee, ligneTotal } from "../ui";
@@ -125,11 +124,9 @@ export function TableauMatrice({
             <TableCell sx={celluleFigee}>Sport</TableCell>
             {matrice.mois.map((m) => (
               <TableCell key={m} align="right">
-                <Tooltip title={formatMoisLong(m)}>
-                  <abbr title={formatMoisLong(m)} style={{ textDecoration: "none" }}>
-                    {formatMoisCourt(m)}
-                  </abbr>
-                </Tooltip>
+                <abbr title={formatMoisLong(m)} style={{ textDecoration: "none" }}>
+                  {formatMoisCourt(m)}
+                </abbr>
               </TableCell>
             ))}
             <TableCell align="right">Total</TableCell>

@@ -137,20 +137,20 @@ export const masqueVisuel: SxProps<Theme> = {
 };
 
 /** Première colonne figée lors du défilement horizontal. */
-export const celluleFigee: SxProps<Theme> = {
+export const celluleFigee = {
   position: "sticky",
   left: 0,
   zIndex: 1,
   bgcolor: "background.paper",
-};
+} as const satisfies SxProps<Theme>;
 
 /** Ligne de total : en gras, teinte superposée (reste opaque sur la colonne figée). */
-export const ligneTotal: SxProps<Theme> = {
+export const ligneTotal = {
   "& > .MuiTableCell-root": {
     fontWeight: 700,
     backgroundImage: "linear-gradient(var(--mui-palette-action-hover), var(--mui-palette-action-hover))",
   },
-};
+} as const satisfies SxProps<Theme>;
 
 /**
  * Champ numérique tolérant (« 1,85 », « 10 € »).

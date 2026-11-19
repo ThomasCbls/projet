@@ -8,6 +8,7 @@ Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules
 - Données stockées dans le **navigateur** (localStorage), avec export et import JSON
 - Aucune variable d'environnement, aucune base de données : `npm install && npm run build` fonctionne tel quel
 - Mobile d'abord, thème clair/sombre, interface entièrement en français
+- **Application installable (PWA)**, utilisable **hors connexion** (voir §3)
 
 ---
 
@@ -22,6 +23,8 @@ npm run dev      # lance l'application en mode développement
 
 Ouvrez ensuite **http://localhost:3000**.
 
+> ⏱️ En mode développement, chaque page est compilée à sa **première** visite (environ 1 s) et React y tourne plus lentement. Pour un usage quotidien, lancez la version de production, où un changement de page prend moins de 100 ms : `npm run build` puis `npm start`.
+
 Autres commandes :
 
 | Commande | Rôle |
@@ -30,7 +33,8 @@ Autres commandes :
 | `npm run lint` | vérifie le code |
 | `npm run build` | construit la version de production |
 | `npm start` | démarre la version de production (après `build`) |
-| `npm run import-excel -- fichier.xlsx` | convertit le classeur Excel en JSON (voir §4) |
+| `npm run import-excel -- fichier.xlsx` | convertit le classeur Excel en JSON (voir §5) |
+| `npm run icones` | régénère les icônes PNG de l'application installable |
 
 ---
 
@@ -52,11 +56,29 @@ Autres commandes :
 
 Ensuite, chaque `git push` sur `main` redéploie l'application automatiquement.
 
-> 💡 Sur un téléphone, ouvrez l'adresse puis choisissez « Ajouter à l'écran d'accueil » pour l'utiliser comme une application.
+---
+
+## 3. Installer l'application (PWA) et l'utiliser hors connexion
+
+L'application peut s'installer comme une application classique : icône sur l'écran d'accueil ou dans le menu Démarrer, ouverture en plein écran, sans barre d'adresse.
+
+- **Android, ordinateur (Chrome, Edge)** : bouton **Réglages → Application → Installer l'application**, ou icône d'installation dans la barre d'adresse.
+- **iPhone, iPad (Safari)** : bouton **Partager**, puis **Sur l'écran d'accueil**.
+
+Après la première visite, **toutes les pages fonctionnent sans connexion**, et les saisies restent enregistrées sur l'appareil. Après un nouveau déploiement, un message « Nouvelle version disponible » propose de recharger.
+
+> ℹ️ Le service worker, qui permet le mode hors connexion, n'est actif qu'en production (`npm run build` puis `npm start`, ou sur Vercel). En mode développement (`npm run dev`), il est volontairement désactivé et désinstallé.
+
+Fichiers concernés :
+- `src/app/manifest.ts` : nom, couleurs et icônes ;
+- `src/app/sw.ts` : service worker, compilé par [Serwist](https://serwist.pages.dev) vers `public/sw.js` ;
+- `src/components/Pwa.tsx` : enregistrement et message de mise à jour.
+
+Les icônes de `public/icons/` se régénèrent avec `npm run icones`.
 
 ---
 
-## 3. Où sont mes données ? (important)
+## 4. Où sont mes données ? (important)
 
 Les données sont enregistrées **dans le navigateur de l'appareil** (localStorage), automatiquement à chaque modification.
 
@@ -67,7 +89,7 @@ Les données sont enregistrées **dans le navigateur de l'appareil** (localStora
 
 ---
 
-## 4. Importer les données du fichier Excel
+## 5. Importer les données du fichier Excel
 
 Si des données sont déjà saisies dans `suivi_sport_annuel.xlsx` :
 
@@ -79,7 +101,7 @@ Le script lit la date de début (`Bilan!B3`), les matchs (`Suivi!D:AQ`), les par
 
 ---
 
-## 5. Règles de calcul (identiques au classeur Excel)
+## 6. Règles de calcul (identiques au classeur Excel)
 
 | Élément | Règle |
 |---|---|
@@ -99,12 +121,14 @@ Différence volontaire avec Excel : changer la date de début **ne décale pas**
 
 ---
 
-## 6. Structure du projet
+## 7. Structure du projet
 
 ```
 src/
 ├─ app/                   pages (App Router)
 │  ├─ page.tsx            Tableau de bord (page d'accueil)
+│  ├─ manifest.ts         manifeste de l'application installable (PWA)
+│  ├─ sw.ts               service worker (hors connexion), compilé vers public/sw.js
 │  ├─ saisie/             Saisie du jour (?date=AAAA-MM-JJ)
 │  ├─ historique/         Historique jour par jour, filtre par mois
 │  ├─ bilan/              Synthèse, bilan par mois et par sport
@@ -112,11 +136,14 @@ src/
 │  └─ reglages/           Date de début, thème, export/import JSON, réinitialisation
 ├─ components/
 │  ├─ Coque.tsx           mise en page : menu latéral (bureau), onglets en bas (mobile)
+│  ├─ Pwa.tsx             enregistrement du service worker, message « Nouvelle version »
 │  ├─ tableau-de-bord/    tableau de bord et graphiques MUI X Charts
 │  ├─ saisie/ bilan/      composants des pages
 │  └─ ui.tsx              briques communes (sections, montants, champ numérique…)
 ├─ theme/                 thème MUI clair/sombre (variables CSS), couleurs des graphiques
-├─ hooks/useDonnees.tsx   état global + sauvegarde automatique
+├─ hooks/
+│  ├─ useDonnees.tsx      état global + sauvegarde automatique
+│  └─ useInstallation.ts  état d'installation de la PWA (bouton « Installer »)
 └─ lib/
    ├─ calculs.ts          toutes les formules (fonctions pures, testées)
    ├─ tableauDeBord.ts    indicateurs du tableau de bord (testés)
@@ -125,7 +152,9 @@ src/
    ├─ storage.ts          couche d'accès aux données (localStorage, import/export)
    ├─ types.ts            modèle de données
    └─ __tests__/          tests Vitest
+public/icons/             icônes de l'application installable
 scripts/import-excel.mjs  conversion Excel → JSON
+scripts/generer-icones.mjs  génération des icônes PNG
 ```
 
 ### Passer à un stockage en ligne (Vercel KV, Supabase…)
