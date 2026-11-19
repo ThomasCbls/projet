@@ -1,46 +1,61 @@
+"use client";
+
+import Box from "@mui/material/Box";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Tooltip from "@mui/material/Tooltip";
 import type { CelluleSport, LigneBilan, MatriceSportMois as Matrice } from "@/lib/calculs";
 import { formatEuro, formatMoisCourt, formatMoisLong, formatPct } from "@/lib/format";
-import { DefilementTableau, Montant } from "../ui";
+import { DefilementTableau, Montant, celluleFigee, ligneTotal } from "../ui";
+
+const attenue = { color: "text.secondary" };
+const couleurSi = (n: number, couleur: string) => (n ? { color: couleur } : attenue);
 
 /** Bilan par mois : 13 mois + « Total (1 an) ». */
 export function TableauMensuel({ mois, total }: { mois: LigneBilan[]; total: LigneBilan }) {
   const ligne = (l: LigneBilan, entete: string, estTotal = false) => (
-    <tr key={l.mois} className={estTotal ? "total" : undefined}>
-      <th scope="row" className="fige">
+    <TableRow key={l.mois} hover={!estTotal} sx={estTotal ? ligneTotal : undefined}>
+      <TableCell component="th" scope="row" sx={celluleFigee}>
         {entete}
-      </th>
-      <td className={l.gagnes ? "text-gagne" : ""}>{l.gagnes}</td>
-      <td className={l.perdus ? "text-perdu" : ""}>{l.perdus}</td>
-      <td>{l.total}</td>
-      <td>{formatPct(l.pct)}</td>
-      <td>{formatEuro(l.mise)}</td>
-      <td>
+      </TableCell>
+      <TableCell align="right" sx={couleurSi(l.gagnes, "success.main")}>
+        {l.gagnes}
+      </TableCell>
+      <TableCell align="right" sx={couleurSi(l.perdus, "error.main")}>
+        {l.perdus}
+      </TableCell>
+      <TableCell align="right">{l.total}</TableCell>
+      <TableCell align="right">{formatPct(l.pct)}</TableCell>
+      <TableCell align="right" sx={l.mise ? undefined : attenue}>
+        {formatEuro(l.mise)}
+      </TableCell>
+      <TableCell align="right">
         <Montant valeur={l.benefice} />
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
   return (
     <DefilementTableau libelle="Bilan par mois">
-      <table className="tableau">
-        <caption className="sr-only">Bilan par mois</caption>
-        <thead>
-          <tr>
-            <th scope="col" className="fige">
-              Mois
-            </th>
-            <th scope="col">Gagnés</th>
-            <th scope="col">Perdus</th>
-            <th scope="col">Total matchs</th>
-            <th scope="col">% réussite</th>
-            <th scope="col">Misé</th>
-            <th scope="col">Bénéfice / perte</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table size="small" aria-label="Bilan par mois">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={celluleFigee}>Mois</TableCell>
+            <TableCell align="right">Gagnés</TableCell>
+            <TableCell align="right">Perdus</TableCell>
+            <TableCell align="right">Total matchs</TableCell>
+            <TableCell align="right">% réussite</TableCell>
+            <TableCell align="right">Misé</TableCell>
+            <TableCell align="right">Bénéfice / perte</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {mois.map((l) => ligne(l, formatMoisLong(l.mois)))}
           {ligne(total, "Total (1 an)", true)}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </DefilementTableau>
   );
 }
@@ -49,33 +64,34 @@ export function TableauMensuel({ mois, total }: { mois: LigneBilan[]; total: Lig
 export function TableauSports({ lignes }: { lignes: (CelluleSport & { id: string; nom: string; total: number })[] }) {
   return (
     <DefilementTableau libelle="Bilan par sport">
-      <table className="tableau">
-        <caption className="sr-only">Bilan par sport sur l&apos;année</caption>
-        <thead>
-          <tr>
-            <th scope="col" className="fige">
-              Sport
-            </th>
-            <th scope="col">Gagnés</th>
-            <th scope="col">Perdus</th>
-            <th scope="col">Total matchs</th>
-            <th scope="col">% réussite</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table size="small" aria-label="Bilan par sport sur l'année">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={celluleFigee}>Sport</TableCell>
+            <TableCell align="right">Gagnés</TableCell>
+            <TableCell align="right">Perdus</TableCell>
+            <TableCell align="right">Total matchs</TableCell>
+            <TableCell align="right">% réussite</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {lignes.map((l) => (
-            <tr key={l.id} className={l.id === "tous" ? "total" : undefined}>
-              <th scope="row" className="fige">
+            <TableRow key={l.id} hover={l.id !== "tous"} sx={l.id === "tous" ? ligneTotal : undefined}>
+              <TableCell component="th" scope="row" sx={celluleFigee}>
                 {l.nom}
-              </th>
-              <td className={l.gagnes ? "text-gagne" : ""}>{l.gagnes}</td>
-              <td className={l.perdus ? "text-perdu" : ""}>{l.perdus}</td>
-              <td>{l.total}</td>
-              <td>{formatPct(l.pct)}</td>
-            </tr>
+              </TableCell>
+              <TableCell align="right" sx={couleurSi(l.gagnes, "success.main")}>
+                {l.gagnes}
+              </TableCell>
+              <TableCell align="right" sx={couleurSi(l.perdus, "error.main")}>
+                {l.perdus}
+              </TableCell>
+              <TableCell align="right">{l.total}</TableCell>
+              <TableCell align="right">{formatPct(l.pct)}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </DefilementTableau>
   );
 }
@@ -93,41 +109,50 @@ export function TableauMatrice({
   const valeur = (c: CelluleSport) => {
     if (mesure === "pct") return formatPct(c.pct);
     const n = c[mesure];
-    return n === 0 ? <span className="text-attenue">0</span> : n;
+    return n === 0 ? (
+      <Box component="span" sx={attenue}>
+        0
+      </Box>
+    ) : (
+      n
+    );
   };
   return (
     <DefilementTableau libelle={titre}>
-      <table className="tableau">
-        <caption className="sr-only">{titre} par sport et par mois</caption>
-        <thead>
-          <tr>
-            <th scope="col" className="fige">
-              Sport
-            </th>
+      <Table size="small" aria-label={`${titre} par sport et par mois`}>
+        <TableHead>
+          <TableRow>
+            <TableCell sx={celluleFigee}>Sport</TableCell>
             {matrice.mois.map((m) => (
-              <th key={m} scope="col">
-                <abbr title={formatMoisLong(m)} className="no-underline">
-                  {formatMoisCourt(m)}
-                </abbr>
-              </th>
+              <TableCell key={m} align="right">
+                <Tooltip title={formatMoisLong(m)}>
+                  <abbr title={formatMoisLong(m)} style={{ textDecoration: "none" }}>
+                    {formatMoisCourt(m)}
+                  </abbr>
+                </Tooltip>
+              </TableCell>
             ))}
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
+            <TableCell align="right">Total</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {matrice.lignes.map((l) => (
-            <tr key={l.id} className={l.id === "tous" ? "total" : undefined}>
-              <th scope="row" className="fige">
+            <TableRow key={l.id} hover={l.id !== "tous"} sx={l.id === "tous" ? ligneTotal : undefined}>
+              <TableCell component="th" scope="row" sx={celluleFigee}>
                 {l.nom}
-              </th>
+              </TableCell>
               {l.parMois.map((c, i) => (
-                <td key={matrice.mois[i]}>{valeur(c)}</td>
+                <TableCell key={matrice.mois[i]} align="right">
+                  {valeur(c)}
+                </TableCell>
               ))}
-              <td className="font-semibold">{valeur(l.total)}</td>
-            </tr>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>
+                {valeur(l.total)}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </DefilementTableau>
   );
 }

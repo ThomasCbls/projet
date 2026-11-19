@@ -3,7 +3,8 @@
 Application web de suivi quotidien des matchs (8 sports × 5 matchs par jour) et des paris (5 par jour, simples ou combinés), avec des bilans par mois et par sport et des graphiques.
 Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules à l'identique.
 
-- **Next.js 15** (App Router) + **TypeScript** + **Tailwind CSS 4**, graphiques **Recharts**
+- **Next.js 15** (App Router) + **TypeScript**, interface **MUI (Material UI) 9**, graphiques **MUI X Charts**
+- Page d'accueil : **tableau de bord** (indicateurs clés, bénéfice cumulé, jauges de réussite, bénéfice et matchs par mois, réussite par sport, derniers jours saisis)
 - Données stockées dans le **navigateur** (localStorage), avec export et import JSON
 - Aucune variable d'environnement, aucune base de données : `npm install && npm run build` fonctionne tel quel
 - Mobile d'abord, thème clair/sombre, interface entièrement en français
@@ -103,15 +104,22 @@ Différence volontaire avec Excel : changer la date de début **ne décale pas**
 ```
 src/
 ├─ app/                   pages (App Router)
-│  ├─ page.tsx            Saisie du jour (page d'accueil, ?date=AAAA-MM-JJ)
-│  ├─ historique/         Calendrier / historique, filtre par mois
-│  ├─ bilan/              Synthèse, bilan par mois et par sport, graphiques
-│  ├─ sports/             Matrices sport × mois (gagnés, perdus, %)
+│  ├─ page.tsx            Tableau de bord (page d'accueil)
+│  ├─ saisie/             Saisie du jour (?date=AAAA-MM-JJ)
+│  ├─ historique/         Historique jour par jour, filtre par mois
+│  ├─ bilan/              Synthèse, bilan par mois et par sport
+│  ├─ sports/             Matrices sport × mois (gagnés, perdus, %) en onglets
 │  └─ reglages/           Date de début, thème, export/import JSON, réinitialisation
-├─ components/            composants d'interface (saisie, bilan, navigation…)
+├─ components/
+│  ├─ Coque.tsx           mise en page : menu latéral (bureau), onglets en bas (mobile)
+│  ├─ tableau-de-bord/    tableau de bord et graphiques MUI X Charts
+│  ├─ saisie/ bilan/      composants des pages
+│  └─ ui.tsx              briques communes (sections, montants, champ numérique…)
+├─ theme/                 thème MUI clair/sombre (variables CSS), couleurs des graphiques
 ├─ hooks/useDonnees.tsx   état global + sauvegarde automatique
 └─ lib/
    ├─ calculs.ts          toutes les formules (fonctions pures, testées)
+   ├─ tableauDeBord.ts    indicateurs du tableau de bord (testés)
    ├─ dates.ts            dates ISO en UTC (période, mois, jours actifs)
    ├─ format.ts           formats français (1 234,50 €, Mer 18 nov. 2026, 66,7 %)
    ├─ storage.ts          couche d'accès aux données (localStorage, import/export)

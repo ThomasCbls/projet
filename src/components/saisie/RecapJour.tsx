@@ -1,33 +1,53 @@
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import type { ResumeJour } from "@/lib/calculs";
 import { formatEuro, formatPct } from "@/lib/format";
 import { Montant } from "../ui";
 
 function Stat({ libelle, children }: { libelle: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg bg-carte-2 px-3 py-2">
-      <dt className="text-xs text-attenue">{libelle}</dt>
-      <dd className="chiffres text-lg font-bold">{children}</dd>
-    </div>
+    <Box sx={{ borderRadius: 2, bgcolor: "action.hover", px: 1.5, py: 1.25 }}>
+      <Typography component="dt" variant="caption" sx={{ color: "text.secondary" }}>
+        {libelle}
+      </Typography>
+      <Typography component="dd" sx={{ m: 0, fontSize: "1.2rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+        {children}
+      </Typography>
+    </Box>
   );
 }
 
+const G = ({ children }: { children: React.ReactNode }) => (
+  <Box component="span" sx={{ color: "success.main" }}>
+    {children}
+  </Box>
+);
+const P = ({ children }: { children: React.ReactNode }) => (
+  <Box component="span" sx={{ color: "error.main" }}>
+    {children}
+  </Box>
+);
+
 export function RecapJour({ resume }: { resume: ResumeJour }) {
   return (
-    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+    <Box
+      component="dl"
+      sx={{ m: 0, display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" } }}
+    >
       <Stat libelle="Matchs gagnés">
-        <span className="text-gagne">{resume.gagnes}</span>
+        <G>{resume.gagnes}</G>
       </Stat>
       <Stat libelle="Matchs perdus">
-        <span className="text-perdu">{resume.perdus}</span>
+        <P>{resume.perdus}</P>
       </Stat>
       <Stat libelle="% réussite">{formatPct(resume.pct)}</Stat>
       <Stat libelle="Paris G / P">
-        <span className="text-gagne">{resume.parisGagnes}</span> / <span className="text-perdu">{resume.parisPerdus}</span>
+        <G>{resume.parisGagnes}</G> / <P>{resume.parisPerdus}</P>
       </Stat>
       <Stat libelle="Total misé">{formatEuro(resume.mise)}</Stat>
       <Stat libelle="Bénéfice / perte">
         <Montant valeur={resume.benefice} />
       </Stat>
-    </dl>
+    </Box>
   );
 }

@@ -1,13 +1,28 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Carte, Chargement, DefilementTableau, Montant, TitrePage } from "@/components/ui";
+import { Chargement, DefilementTableau, EnTetePage, Montant, celluleFigee, ligneTotal } from "@/components/ui";
 import { useDonnees } from "@/hooks/useDonnees";
 import { pourcentage, resumesPeriode } from "@/lib/calculs";
 import { aujourdhuiIso, cleMois, finPeriode, moisDeLaPeriode } from "@/lib/dates";
 import { formatDateCourte, formatEuro, formatMoisLong, formatPct, jourSemaine } from "@/lib/format";
+import { aActivite } from "@/lib/tableauDeBord";
+
+const attenue = { color: "text.secondary" };
 
 export default function PageHistorique() {
   const { data } = useDonnees();
@@ -22,7 +37,7 @@ export default function PageHistorique() {
   const aujourdhui = aujourdhuiIso();
   const lignes = resumes.filter((r) => {
     if (mois !== "tous" && cleMois(r.date) !== mois) return false;
-    if (masquerVides && r.gagnes + r.perdus === 0 && r.mise === 0 && r.benefice === 0) return false;
+    if (masquerVides && !aActivite(r)) return false;
     return true;
   });
   const somme = (k: "gagnes" | "perdus" | "mise" | "benefice") => lignes.reduce((s, r) => s + r[k], 0);
@@ -30,107 +45,116 @@ export default function PageHistorique() {
   const tp = somme("perdus");
 
   return (
-    <div>
-      <TitrePage sousTitre={`Du ${formatDateCourte(data.dateDebut)} au ${formatDateCourte(finPeriode(data.dateDebut))}`}>
-        Historique
-      </TitrePage>
+    <>
+      <EnTetePage
+        titre="Historique"
+        sousTitre={`Du ${formatDateCourte(data.dateDebut)} au ${formatDateCourte(finPeriode(data.dateDebut))}`}
+      />
 
-      <Carte className="mb-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-48 flex-1 sm:flex-none">
-            <label htmlFor="filtre-mois" className="mb-1 block text-xs font-medium text-attenue">
-              Mois
-            </label>
-            <select id="filtre-mois" className="champ" value={mois} onChange={(e) => setMois(e.target.value)}>
-              <option value="tous">Toute la période</option>
-              {listeMois.map((m) => (
-                <option key={m} value={m}>
-                  {formatMoisLong(m)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="h-5 w-5 accent-[var(--accent)]"
-              checked={masquerVides}
-              onChange={(e) => setMasquerVides(e.target.checked)}
-            />
-            Masquer les jours sans saisie
-          </label>
-        </div>
-      </Carte>
+      <Card sx={{ mb: 2.5, p: { xs: 2, sm: 2.5 }, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
+        <TextField
+          select
+          label="Mois"
+          value={mois}
+          onChange={(e) => setMois(e.target.value)}
+          sx={{ minWidth: 220, flex: { xs: 1, sm: "none" } }}
+        >
+          <MenuItem value="tous">Toute la période</MenuItem>
+          {listeMois.map((m) => (
+            <MenuItem key={m} value={m}>
+              {formatMoisLong(m)}
+            </MenuItem>
+          ))}
+        </TextField>
+        <FormControlLabel
+          control={<Switch checked={masquerVides} onChange={(e) => setMasquerVides(e.target.checked)} />}
+          label="Masquer les jours sans saisie"
+        />
+      </Card>
 
-      <Carte>
+      <Card sx={{ p: { xs: 2, sm: 2.5 } }}>
         {lignes.length === 0 ? (
-          <p className="py-6 text-center text-attenue">Aucun jour à afficher.</p>
+          <Typography sx={{ py: 6, textAlign: "center", ...attenue }}>Aucun jour à afficher.</Typography>
         ) : (
           <DefilementTableau libelle="Historique des jours">
-            <table className="tableau">
-              <caption className="sr-only">
-                Historique jour par jour : matchs gagnés, perdus, pourcentage de réussite, mise et bénéfice. Cliquer
-                sur une date pour ouvrir le jour.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col" className="fige">
-                    Date
-                  </th>
-                  <th scope="col" className="hidden !text-left sm:table-cell">
-                    Jour
-                  </th>
-                  <th scope="col">Gagnés</th>
-                  <th scope="col">Perdus</th>
-                  <th scope="col">% réussite</th>
-                  <th scope="col">Misé</th>
-                  <th scope="col">Bénéfice</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lignes.map((r) => (
-                  <tr
-                    key={r.date}
-                    className="cliquable"
-                    onClick={() => router.push(`/?date=${r.date}`)}
-                    aria-current={r.date === aujourdhui ? "date" : undefined}
-                  >
-                    <th scope="row" className="fige">
-                      <Link
-                        href={`/?date=${r.date}`}
-                        className={`underline-offset-2 hover:underline ${r.date === aujourdhui ? "font-bold text-accent" : ""}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="sm:hidden">{formatDateCourte(r.date).slice(0, -5)}</span>
-                        <span className="hidden sm:inline">{formatDateCourte(r.date).slice(4)}</span>
-                      </Link>
-                    </th>
-                    <td className="hidden !text-left text-attenue sm:table-cell">{jourSemaine(r.date)}</td>
-                    <td className={r.gagnes ? "text-gagne" : "text-attenue"}>{r.gagnes}</td>
-                    <td className={r.perdus ? "text-perdu" : "text-attenue"}>{r.perdus}</td>
-                    <td>{formatPct(r.pct)}</td>
-                    <td className={r.mise ? "" : "text-attenue"}>{formatEuro(r.mise)}</td>
-                    <td>{r.benefice === 0 ? <span className="text-attenue">{formatEuro(0)}</span> : <Montant valeur={r.benefice} />}</td>
-                  </tr>
-                ))}
-                <tr className="total">
-                  <th scope="row" className="fige">
+            <Table size="small" aria-label="Historique jour par jour. Cliquer sur une date pour ouvrir le jour.">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={celluleFigee}>Date</TableCell>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>Jour</TableCell>
+                  <TableCell align="right">Gagnés</TableCell>
+                  <TableCell align="right">Perdus</TableCell>
+                  <TableCell align="right">% réussite</TableCell>
+                  <TableCell align="right">Misé</TableCell>
+                  <TableCell align="right">Bénéfice</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {lignes.map((r) => {
+                  const estAujourdhui = r.date === aujourdhui;
+                  return (
+                    <TableRow
+                      key={r.date}
+                      hover
+                      onClick={() => router.push(`/saisie?date=${r.date}`)}
+                      aria-current={estAujourdhui ? "date" : undefined}
+                      sx={{ cursor: "pointer" }}
+                    >
+                      <TableCell component="th" scope="row" sx={celluleFigee}>
+                        <Box
+                          component={Link}
+                          href={`/saisie?date=${r.date}`}
+                          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                          sx={{
+                            color: estAujourdhui ? "primary.main" : "inherit",
+                            fontWeight: estAujourdhui ? 700 : 500,
+                            textDecoration: "none",
+                            "&:hover": { textDecoration: "underline" },
+                          }}
+                        >
+                          <Box component="span" sx={{ display: { sm: "none" } }}>
+                            {formatDateCourte(r.date).slice(0, -5)}
+                          </Box>
+                          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                            {formatDateCourte(r.date).slice(4)}
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: "none", sm: "table-cell" }, ...attenue }}>{jourSemaine(r.date)}</TableCell>
+                      <TableCell align="right" sx={r.gagnes ? { color: "success.main" } : attenue}>
+                        {r.gagnes}
+                      </TableCell>
+                      <TableCell align="right" sx={r.perdus ? { color: "error.main" } : attenue}>
+                        {r.perdus}
+                      </TableCell>
+                      <TableCell align="right">{formatPct(r.pct)}</TableCell>
+                      <TableCell align="right" sx={r.mise ? undefined : attenue}>
+                        {formatEuro(r.mise)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {r.benefice === 0 ? <Box component="span" sx={attenue}>{formatEuro(0)}</Box> : <Montant valeur={r.benefice} />}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow sx={ligneTotal}>
+                  <TableCell component="th" scope="row" sx={celluleFigee}>
                     Total
-                  </th>
-                  <td className="hidden sm:table-cell" />
-                  <td>{tg}</td>
-                  <td>{tp}</td>
-                  <td>{formatPct(pourcentage(tg, tp))}</td>
-                  <td>{formatEuro(somme("mise"))}</td>
-                  <td>
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }} />
+                  <TableCell align="right">{tg}</TableCell>
+                  <TableCell align="right">{tp}</TableCell>
+                  <TableCell align="right">{formatPct(pourcentage(tg, tp))}</TableCell>
+                  <TableCell align="right">{formatEuro(somme("mise"))}</TableCell>
+                  <TableCell align="right">
                     <Montant valeur={somme("benefice")} />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </DefilementTableau>
         )}
-      </Carte>
-    </div>
+      </Card>
+    </>
   );
 }

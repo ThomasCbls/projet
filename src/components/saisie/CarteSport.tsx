@@ -1,5 +1,8 @@
 "use client";
 
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Typography from "@mui/material/Typography";
 import { pourcentage } from "@/lib/calculs";
 import { formatPct } from "@/lib/format";
 import type { Resultat } from "@/lib/types";
@@ -17,25 +20,33 @@ export function CarteSport({
   const g = cases.filter((c) => c === "G").length;
   const p = cases.filter((c) => c === "P").length;
   return (
-    <div className="rounded-xl border border-bord bg-carte p-3">
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <h3 className="font-semibold">{nom}</h3>
-        <p className="chiffres text-xs text-attenue">
+    <Card sx={{ p: 1.5, height: "100%" }}>
+      <Box sx={{ mb: 1.25, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
+        <Typography component="h3" sx={{ fontWeight: 600 }}>
+          {nom}
+        </Typography>
+        <Typography variant="caption" sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}>
           {g + p === 0 ? (
             "Aucun match"
           ) : (
             <>
-              <span className="font-semibold text-gagne">{g} G</span> · <span className="font-semibold text-perdu">{p} P</span>{" "}
-              · {formatPct(pourcentage(g, p))}
+              <Box component="span" sx={{ fontWeight: 700, color: "success.main" }}>
+                {g} G
+              </Box>
+              {" · "}
+              <Box component="span" sx={{ fontWeight: 700, color: "error.main" }}>
+                {p} P
+              </Box>
+              {` · ${formatPct(pourcentage(g, p))}`}
             </>
           )}
-        </p>
-      </div>
-      <div className="flex gap-1.5" role="group" aria-label={`Matchs de ${nom}`}>
+        </Typography>
+      </Box>
+      <Box role="group" aria-label={`Matchs de ${nom}`} sx={{ display: "flex", gap: 0.75 }}>
         {cases.map((c, i) => (
           <BoutonResultat key={i} valeur={c} libelle={`${nom}, match ${i + 1}`} onChange={(v) => onChange(i, v)} />
         ))}
-      </div>
-    </div>
+      </Box>
+    </Card>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
+import ButtonBase from "@mui/material/ButtonBase";
 import type { Resultat } from "@/lib/types";
+import { FOND_GAGNE, FOND_PERDU } from "@/theme/constantes";
 
 const SUIVANT: Record<Resultat, Resultat> = { "": "G", G: "P", P: "" };
 const LIBELLE: Record<Resultat, string> = { "": "vide", G: "gagné", P: "perdu" };
@@ -16,20 +18,34 @@ export function BoutonResultat({
   /** Ex. « Foot, match 3 » */
   libelle: string;
 }) {
-  const style =
-    valeur === "G"
-      ? "border-gagne-fond bg-gagne-fond text-white"
-      : valeur === "P"
-        ? "border-perdu-fond bg-perdu-fond text-white"
-        : "border-bord border-dashed bg-carte text-attenue hover:border-attenue";
+  const fond = valeur === "G" ? FOND_GAGNE : valeur === "P" ? FOND_PERDU : undefined;
   return (
-    <button
-      type="button"
+    <ButtonBase
+      focusRipple
       onClick={() => onChange(SUIVANT[valeur])}
       aria-label={`${libelle} : ${LIBELLE[valeur]}. Toucher pour passer à ${LIBELLE[SUIVANT[valeur]]}`}
-      className={`flex h-12 min-w-11 flex-1 select-none items-center justify-center rounded-lg border-2 text-lg font-bold transition-colors active:scale-95 ${style}`}
+      sx={{
+        flex: 1,
+        minWidth: 44,
+        height: 48,
+        borderRadius: 1,
+        fontSize: "1.1rem",
+        fontWeight: 700,
+        userSelect: "none",
+        transition: "background-color 120ms, transform 80ms",
+        "&:active": { transform: "scale(0.95)" },
+        ...(fond
+          ? { bgcolor: fond, color: "#fff", border: 2, borderColor: fond }
+          : {
+              color: "text.secondary",
+              border: 2,
+              borderStyle: "dashed",
+              borderColor: "divider",
+              "&:hover": { borderColor: "text.secondary" },
+            }),
+      }}
     >
       {valeur || <span aria-hidden="true">·</span>}
-    </button>
+    </ButtonBase>
   );
 }

@@ -1,11 +1,5 @@
-import { Suspense } from "react";
-import { SaisieJour } from "@/components/saisie/SaisieJour";
-import { Chargement } from "@/components/ui";
+import { TableauDeBord } from "@/components/tableau-de-bord/TableauDeBord";
 
-export default function PageSaisie() {
-  return (
-    <Suspense fallback={<Chargement />}>
-      <SaisieJour />
-    </Suspense>
-  );
+export default function PageAccueil() {
+  return <TableauDeBord />;
 }

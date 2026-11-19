@@ -1,17 +1,62 @@
 "use client";
 
+import WarningAmberRounded from "@mui/icons-material/WarningAmberRounded";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Typography from "@mui/material/Typography";
 import { useId } from "react";
 import { beneficePariSimple, pariSansCote } from "@/lib/calculs";
 import { formatEuro } from "@/lib/format";
 import type { Pari, Resultat } from "@/lib/types";
-import { IconeAlerte } from "../Icones";
-import { ChampNombre, Montant, Segments } from "../ui";
+import { FOND_GAGNE, FOND_PERDU } from "@/theme/constantes";
+import { ChampNombre, Montant, masqueVisuel } from "../ui";
 
-const OPTIONS_RESULTAT: { valeur: Resultat; texte: string; classeActive?: string; aria: string }[] = [
-  { valeur: "", texte: "–", classeActive: "bg-carte-2 text-texte", aria: "Sans résultat" },
-  { valeur: "G", texte: "G", classeActive: "bg-gagne-fond text-white", aria: "Gagné" },
-  { valeur: "P", texte: "P", classeActive: "bg-perdu-fond text-white", aria: "Perdu" },
+const OPTIONS: { valeur: Resultat; texte: string; aria: string; fond?: string }[] = [
+  { valeur: "", texte: "–", aria: "Sans résultat" },
+  { valeur: "G", texte: "G", aria: "Gagné", fond: FOND_GAGNE },
+  { valeur: "P", texte: "P", aria: "Perdu", fond: FOND_PERDU },
 ];
+
+/** Gagné / Perdu / sans résultat. */
+export function ChoixResultat({ valeur, onChange }: { valeur: Resultat; onChange: (r: Resultat) => void }) {
+  const id = useId();
+  return (
+    <Box>
+      <Typography id={id} variant="caption" sx={{ color: "text.secondary", display: "block", mb: 0.25 }}>
+        Résultat
+      </Typography>
+      <ToggleButtonGroup
+        exclusive
+        fullWidth
+        size="small"
+        value={valeur}
+        onChange={(_, r: Resultat | null) => r !== null && onChange(r)}
+        aria-labelledby={id}
+        sx={{ height: 40 }}
+      >
+        {OPTIONS.map((o) => (
+          <ToggleButton
+            key={o.valeur || "vide"}
+            value={o.valeur}
+            aria-label={o.aria}
+            sx={{
+              fontWeight: 700,
+              fontSize: "1rem",
+              ...(o.fond && {
+                "&.Mui-selected, &.Mui-selected:hover": { bgcolor: o.fond, color: "#fff", borderColor: o.fond },
+              }),
+            }}
+          >
+            {o.texte}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </Box>
+  );
+}
 
 export function LignePari({
   numero,
@@ -24,53 +69,55 @@ export function LignePari({
   combine: boolean;
   onChange: (p: Pari) => void;
 }) {
-  const idEquipes = useId();
   const maj = (champ: Partial<Pari>) => onChange({ ...pari, ...champ });
-  const benefice = beneficePariSimple(pari);
   const titre = combine ? `Sélection ${numero}` : `Pari ${numero}`;
 
   return (
-    <fieldset className="rounded-xl border border-bord bg-carte p-3">
-      <legend className="sr-only">{titre}</legend>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span aria-hidden="true" className="text-sm font-semibold">
+    <Card component="fieldset" sx={{ p: 2, m: 0, minWidth: 0 }}>
+      <Box component="legend" sx={masqueVisuel}>
+        {titre}
+      </Box>
+      <Box sx={{ mb: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+        <Typography aria-hidden="true" variant="subtitle2">
           {titre}
-        </span>
-        {!combine && pari.resultat !== "" && <Montant valeur={benefice} className="text-sm font-semibold" />}
-      </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_7rem_6rem_9rem]">
-        <div className="col-span-2 sm:col-span-1">
-          <label htmlFor={idEquipes} className="mb-1 block text-xs font-medium text-attenue">
-            Équipes / pari
-          </label>
-          <input
-            id={idEquipes}
-            type="text"
-            className="champ"
+        </Typography>
+        {!combine && pari.resultat !== "" && <Montant valeur={beneficePariSimple(pari)} sx={{ fontWeight: 700 }} />}
+      </Box>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1.5,
+          alignItems: "end",
+          gridTemplateColumns: {
+            xs: "1fr 1fr",
+            sm: combine ? "minmax(0,1fr) 6rem 9rem" : "minmax(0,1fr) 7rem 6rem 9rem",
+          },
+        }}
+      >
+        <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" } }}>
+          <TextField
+            label="Équipes / pari"
+            fullWidth
             placeholder="Ex. PSG – OM"
             value={pari.equipes}
             onChange={(e) => maj({ equipes: e.target.value })}
           />
-        </div>
-        {!combine && (
-          <ChampNombre libelle="Mise" suffixe="€" valeur={pari.mise} onChange={(mise) => maj({ mise })} />
-        )}
+        </Box>
+        {!combine && <ChampNombre libelle="Mise" suffixe="€" valeur={pari.mise} onChange={(mise) => maj({ mise })} />}
         <ChampNombre libelle="Cote" valeur={pari.cote} onChange={(cote) => maj({ cote })} />
-        <div className={combine ? "" : "col-span-2 sm:col-span-1"}>
-          <Segments
-            libelle="Résultat"
-            options={OPTIONS_RESULTAT}
-            valeur={pari.resultat}
-            onChange={(resultat) => maj({ resultat })}
-          />
-        </div>
-      </div>
+        <Box sx={{ gridColumn: { xs: combine ? "auto" : "1 / -1", sm: "auto" } }}>
+          <ChoixResultat valeur={pari.resultat} onChange={(resultat) => maj({ resultat })} />
+        </Box>
+      </Box>
       {!combine && pariSansCote(pari) && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-perdu">
-          <IconeAlerte className="h-4 w-4 shrink-0" />
+        <Typography
+          variant="caption"
+          sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 0.75, color: "error.main" }}
+        >
+          <WarningAmberRounded fontSize="small" />
           Cote manquante : comme dans Excel, ce pari gagné compte {formatEuro(0 - (pari.mise ?? 0))}.
-        </p>
+        </Typography>
       )}
-    </fieldset>
+    </Card>
   );
 }

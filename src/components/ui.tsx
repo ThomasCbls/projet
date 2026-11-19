@@ -1,67 +1,156 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CircularProgress from "@mui/material/CircularProgress";
+import InputAdornment from "@mui/material/InputAdornment";
+import type { SxProps, Theme } from "@mui/material/styles";
+import TableContainer from "@mui/material/TableContainer";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { useEffect, useState } from "react";
 import { formatEuroSigne, formatNombre, parseNombre } from "@/lib/format";
 
-/** Bloc de contenu avec titre. */
-export function Carte({
+/** Titre de page, sous-titre et action à droite. */
+export function EnTetePage({
   titre,
+  sousTitre,
   action,
-  children,
-  className = "",
 }: {
-  titre?: React.ReactNode;
+  titre: React.ReactNode;
+  sousTitre?: React.ReactNode;
   action?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-bord bg-carte p-4 ${className}`}>
+    <Box
+      sx={{
+        mb: 3,
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: { xs: "flex-start", sm: "flex-end" },
+        justifyContent: "space-between",
+        gap: 2,
+      }}
+    >
+      <Box>
+        <Typography variant="h4" component="h1" sx={{ fontSize: { xs: "1.6rem", sm: "2rem" } }}>
+          {titre}
+        </Typography>
+        {sousTitre && (
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+            {sousTitre}
+          </Typography>
+        )}
+      </Box>
+      {action}
+    </Box>
+  );
+}
+
+/** Carte de contenu avec titre, sous-titre et action. */
+export function Section({
+  titre,
+  sousTitre,
+  action,
+  children,
+  sx,
+  idTitre,
+}: {
+  titre?: React.ReactNode;
+  sousTitre?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  sx?: SxProps<Theme>;
+  idTitre?: string;
+}) {
+  return (
+    <Card component="section" aria-labelledby={idTitre} sx={{ p: { xs: 2, sm: 2.5 }, height: "100%", ...sx }}>
       {(titre || action) && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          {titre && <h2 className="text-base font-semibold">{titre}</h2>}
+        <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+          <Box>
+            {titre && (
+              <Typography variant="h6" component="h2" id={idTitre}>
+                {titre}
+              </Typography>
+            )}
+            {sousTitre && (
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.25 }}>
+                {sousTitre}
+              </Typography>
+            )}
+          </Box>
           {action}
-        </div>
+        </Box>
       )}
       {children}
-    </section>
+    </Card>
   );
 }
 
 /** Montant signé, vert si positif, rouge si négatif. */
-export function Montant({ valeur, className = "" }: { valeur: number; className?: string }) {
+export function Montant({ valeur, sx }: { valeur: number; sx?: SxProps<Theme> }) {
   const arrondi = Math.round(valeur * 100) / 100;
-  const couleur = arrondi > 0 ? "text-gagne" : arrondi < 0 ? "text-perdu" : "";
-  return <span className={`chiffres ${couleur} ${className}`}>{formatEuroSigne(valeur)}</span>;
-}
-
-/** Titre de page. */
-export function TitrePage({ children, sousTitre }: { children: React.ReactNode; sousTitre?: React.ReactNode }) {
   return (
-    <div className="mb-4">
-      <h1 className="text-2xl font-bold tracking-tight">{children}</h1>
-      {sousTitre && <p className="mt-1 text-sm text-attenue">{sousTitre}</p>}
-    </div>
-  );
-}
-
-/** Conteneur défilant horizontalement pour les tableaux larges. */
-export function DefilementTableau({ children, libelle }: { children: React.ReactNode; libelle: string }) {
-  return (
-    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="region" aria-label={libelle} tabIndex={0}>
-      {children}
-    </div>
+    <Box
+      component="span"
+      sx={{
+        fontVariantNumeric: "tabular-nums",
+        color: arrondi > 0 ? "success.main" : arrondi < 0 ? "error.main" : "inherit",
+        ...sx,
+      }}
+    >
+      {formatEuroSigne(valeur)}
+    </Box>
   );
 }
 
 /** Écran de chargement tant que les données locales ne sont pas lues. */
 export function Chargement() {
   return (
-    <p className="py-16 text-center text-attenue" role="status">
-      Chargement des données…
-    </p>
+    <Box role="status" sx={{ py: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      <CircularProgress size={32} />
+      <Typography sx={{ color: "text.secondary" }}>Chargement des données…</Typography>
+    </Box>
   );
 }
+
+/** Tableau défilant horizontalement, première colonne figée (voir `celluleFigee`). */
+export function DefilementTableau({ children, libelle }: { children: React.ReactNode; libelle: string }) {
+  return (
+    <TableContainer role="region" aria-label={libelle} tabIndex={0} sx={{ mx: { xs: -2, sm: 0 }, width: "auto" }}>
+      {children}
+    </TableContainer>
+  );
+}
+
+/** Masqué à l'écran, lu par les lecteurs d'écran (valeurs en px : en sx, `width: 1` vaut 100 %). */
+export const masqueVisuel: SxProps<Theme> = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  p: 0,
+  m: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
+/** Première colonne figée lors du défilement horizontal. */
+export const celluleFigee: SxProps<Theme> = {
+  position: "sticky",
+  left: 0,
+  zIndex: 1,
+  bgcolor: "background.paper",
+};
+
+/** Ligne de total : en gras, teinte superposée (reste opaque sur la colonne figée). */
+export const ligneTotal: SxProps<Theme> = {
+  "& > .MuiTableCell-root": {
+    fontWeight: 700,
+    backgroundImage: "linear-gradient(var(--mui-palette-action-hover), var(--mui-palette-action-hover))",
+  },
+};
 
 /**
  * Champ numérique tolérant (« 1,85 », « 10 € »).
@@ -74,7 +163,6 @@ export function ChampNombre({
   suffixe,
   placeholder,
   disabled,
-  masquerLibelle = false,
 }: {
   libelle: string;
   valeur: number | null;
@@ -82,9 +170,7 @@ export function ChampNombre({
   suffixe?: string;
   placeholder?: string;
   disabled?: boolean;
-  masquerLibelle?: boolean;
 }) {
-  const id = useId();
   const versTexte = (v: number | null) => (v === null ? "" : formatNombre(v).replace(/\s/g, ""));
   const [texte, setTexte] = useState(versTexte(valeur));
 
@@ -96,80 +182,26 @@ export function ChampNombre({
   const invalide = texte.trim() !== "" && parseNombre(texte) === null;
 
   return (
-    <div>
-      <label htmlFor={id} className={masquerLibelle ? "sr-only" : "mb-1 block text-xs font-medium text-attenue"}>
-        {libelle}
-      </label>
-      <div className="relative">
-        <input
-          id={id}
-          type="text"
-          inputMode="decimal"
-          autoComplete="off"
-          className={`champ chiffres ${suffixe ? "pr-8" : ""} ${invalide ? "border-perdu" : ""}`}
-          value={texte}
-          placeholder={placeholder}
-          disabled={disabled}
-          aria-invalid={invalide || undefined}
-          onChange={(e) => {
-            setTexte(e.target.value);
-            const n = parseNombre(e.target.value);
-            if (e.target.value.trim() === "" || n !== null) onChange(n);
-          }}
-          onBlur={() => {
-            if (!invalide) setTexte(versTexte(parseNombre(texte)));
-          }}
-        />
-        {suffixe && (
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-attenue">
-            {suffixe}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Contrôle segmenté (radiogroup accessible). */
-export function Segments<T extends string>({
-  libelle,
-  options,
-  valeur,
-  onChange,
-  masquerLibelle = false,
-}: {
-  libelle: string;
-  options: { valeur: T; texte: string; classeActive?: string; aria?: string }[];
-  valeur: T;
-  onChange: (v: T) => void;
-  masquerLibelle?: boolean;
-}) {
-  const id = useId();
-  return (
-    <div>
-      <span id={id} className={masquerLibelle ? "sr-only" : "mb-1 block text-xs font-medium text-attenue"}>
-        {libelle}
-      </span>
-      <div role="radiogroup" aria-labelledby={id} className="inline-flex w-full rounded-lg border border-bord p-1">
-        {options.map((o) => {
-          const actif = o.valeur === valeur;
-          return (
-            <button
-              key={o.valeur}
-              type="button"
-              role="radio"
-              aria-checked={actif}
-              aria-label={o.aria}
-              onClick={() => onChange(o.valeur)}
-              className={`min-h-10 flex-1 rounded-md px-3 text-sm font-semibold transition-colors ${
-                actif ? (o.classeActive ?? "bg-accent text-accent-texte") : "text-attenue hover:text-texte"
-              }`}
-            >
-              {o.texte}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <TextField
+      label={libelle}
+      fullWidth
+      value={texte}
+      placeholder={placeholder}
+      disabled={disabled}
+      error={invalide}
+      autoComplete="off"
+      onChange={(e) => {
+        setTexte(e.target.value);
+        const n = parseNombre(e.target.value);
+        if (e.target.value.trim() === "" || n !== null) onChange(n);
+      }}
+      onBlur={() => {
+        if (!invalide) setTexte(versTexte(parseNombre(texte)));
+      }}
+      slotProps={{
+        htmlInput: { inputMode: "decimal", style: { fontVariantNumeric: "tabular-nums" } },
+        input: suffixe ? { endAdornment: <InputAdornment position="end">{suffixe}</InputAdornment> } : undefined,
+      }}
+    />
   );
 }
