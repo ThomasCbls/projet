@@ -6,7 +6,8 @@ Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules
 - **Next.js 15** (App Router) + **TypeScript**, interface **MUI (Material UI) 9**, graphiques **MUI X Charts**
 - Page d'accueil : **tableau de bord** (indicateurs clés, bénéfice cumulé, jauges de réussite, bénéfice et matchs par mois, réussite par sport, derniers jours saisis)
 - Données stockées dans le **navigateur** (localStorage), avec export et import JSON
-- Aucune variable d'environnement, aucune base de données : `npm install && npm run build` fonctionne tel quel
+- **Synchronisation entre appareils** (optionnelle) avec un compte **Supabase** : voir §4
+- Sans variable d'environnement, l'application reste 100 % locale : `npm install && npm run build` fonctionne tel quel
 - Mobile d'abord, thème clair/sombre, interface entièrement en français
 - **Application installable (PWA)**, utilisable **hors connexion** (voir §3)
 
@@ -29,7 +30,7 @@ Autres commandes :
 
 | Commande | Rôle |
 |---|---|
-| `npm test` | lance les tests des calculs (Vitest) |
+| `npm test` | lance les tests des calculs et de la synchronisation (Vitest) |
 | `npm run lint` | vérifie le code |
 | `npm run build` | construit la version de production |
 | `npm start` | démarre la version de production (après `build`) |
@@ -80,12 +81,37 @@ Les icônes de `public/icons/` se régénèrent avec `npm run icones`.
 
 ## 4. Où sont mes données ? (important)
 
-Les données sont enregistrées **dans le navigateur de l'appareil** (localStorage), automatiquement à chaque modification.
+Les données sont toujours enregistrées **dans le navigateur de l'appareil** (localStorage), automatiquement à chaque modification. L'application fonctionne donc aussi hors connexion.
 
-- Elles ne sont **pas** synchronisées entre le téléphone et l'ordinateur.
-- Elles sont perdues si vous videz les données du site dans le navigateur.
+**Sans compte** (ou sans Supabase configuré) :
+- les données ne sont **pas** synchronisées entre le téléphone et l'ordinateur ;
+- elles sont perdues si vous videz les données du site dans le navigateur.
 
-👉 Pensez à faire régulièrement **Réglages → Exporter en JSON**. Pour restaurer les données, ou les transférer sur un autre appareil, utilisez **Réglages → Importer un JSON**.
+**Avec un compte** (**Réglages → Compte et synchronisation → Se connecter**), les données sont aussi enregistrées en ligne et synchronisées sur tous les appareils connectés au même compte :
+- à l'ouverture de l'application, au retour sur l'onglet, au retour du réseau et après chaque saisie ;
+- hors ligne, les saisies attendent sur l'appareil (indicateur « Hors ligne ») et partent dès que la connexion revient ;
+- si un même jour a été modifié sur deux appareils, la modification la plus récente est gardée ;
+- à la première connexion, les jours déjà saisis sur l'appareil sont ajoutés au compte (en cas de conflit, la version en ligne est gardée, et une copie de l'ancien contenu reste dans le navigateur sous la clé `suivi-sport:v1:avant-sync`) ;
+- la déconnexion efface les données de l'appareil ; elles restent sur le compte.
+
+👉 Dans tous les cas, **Réglages → Exporter en JSON** reste une bonne copie de sécurité. Pour restaurer les données, utilisez **Réglages → Importer un JSON**.
+
+### Activer la synchronisation (Supabase, gratuit)
+
+1. **Créer la base.** Sur Vercel, ouvrez le projet → **Storage** (ou *Marketplace*) → **Supabase** → *Create*. L'intégration ajoute les variables `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) au projet Vercel.
+   *Sans Vercel :* créez un projet sur [supabase.com](https://supabase.com) et recopiez ces deux valeurs (*Project Settings → API*) dans les variables d'environnement.
+2. **Créer les tables.** Dans Supabase → **SQL Editor**, collez et exécutez le contenu de `supabase/migrations/0001_init.sql`.
+3. **Comptes.** Dans Supabase → **Authentication → Sign In / Providers → Email** : laissez *Email* activé. Si vous êtes seul à utiliser l'application, vous pouvez désactiver *Confirm email* pour vous connecter dès la création du compte. Sinon, renseignez l'adresse de l'application dans **Authentication → URL Configuration → Site URL**, pour que le lien de confirmation y mène.
+4. **Redéployer** sur Vercel pour que les variables soient prises en compte, puis créez votre compte depuis **Réglages → Se connecter**, sur chaque appareil.
+
+En local, copiez les deux variables dans un fichier `.env.local` à la racine du projet (il n'est pas envoyé sur GitHub) :
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+Fichiers concernés : `src/lib/sync.ts` (synchronisation), `src/lib/supabase.ts` (accès à Supabase), `src/hooks/useSession.tsx` (compte), `src/app/connexion/page.tsx`.
 
 ---
 

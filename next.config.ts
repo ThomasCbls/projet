@@ -3,7 +3,7 @@ import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
 
 /** Pages mises en cache dès l'installation : toute l'application fonctionne hors ligne. */
-const PAGES = ["/", "/saisie", "/historique", "/bilan", "/sports", "/reglages"];
+const PAGES = ["/", "/saisie", "/historique", "/bilan", "/sports", "/reglages", "/connexion"];
 const ICONES = ["icon-192.png", "icon-512.png", "icon-maskable-512.png"];
 
 // Change à chaque build : les pages en cache sont rafraîchies à chaque nouvelle version.

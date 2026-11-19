@@ -1,9 +1,10 @@
 /**
  * Couche d'accès aux données, isolée du reste de l'application.
  *
- * Par défaut : localStorage du navigateur. Pour passer à Vercel KV, Supabase…,
- * il suffit d'écrire un autre `StorageAdapter` (charger / sauvegarder) et de
- * le renvoyer depuis `creerStockage()`.
+ * Les données vivent toujours dans le localStorage du navigateur (l'application
+ * fonctionne hors ligne). Si Supabase est configuré, `creerStockage()` (lib/sync.ts)
+ * renvoie un adaptateur qui synchronise en plus ces données avec le compte de
+ * l'utilisateur.
  */
 import { estDateIso } from "./dates";
 import {
@@ -20,11 +21,43 @@ import {
   jourVide,
 } from "./types";
 
+/** Accès de l'adaptateur à l'état affiché par l'interface (voir hooks/useDonnees). */
+export interface AccesDonnees {
+  /** Dernières données de l'interface, y compris une saisie pas encore sauvegardée. */
+  lire(): AppData | null;
+  /** Remplace les données de l'interface (modifications reçues d'un autre appareil). */
+  appliquer(data: AppData): void;
+}
+
+/** Synchronisation en ligne, présente seulement si elle est configurée. */
+export interface Synchronisation {
+  /** Échange avec le serveur. `false` si personne n'est connecté ; lève une erreur si le réseau échoue. */
+  synchroniser(acces: AccesDonnees): Promise<boolean>;
+  /** Nombre de modifications pas encore envoyées. */
+  nbEnAttente(): number;
+  /** Déconnecte le compte et efface les données de cet appareil. */
+  oublier(): Promise<void>;
+}
+
 export interface StorageAdapter {
   charger(): Promise<AppData>;
   sauvegarder(data: AppData): Promise<void>;
   effacer(): Promise<void>;
+  synchro?: Synchronisation;
 }
+
+/** Stockage clé / valeur (localStorage dans le navigateur, une Map dans les tests). */
+export interface Cles {
+  lire(cle: string): string | null;
+  ecrire(cle: string, valeur: string): void;
+  supprimer(cle: string): void;
+}
+
+export const clesNavigateur: Cles = {
+  lire: (cle) => window.localStorage.getItem(cle),
+  ecrire: (cle, valeur) => window.localStorage.setItem(cle, valeur),
+  supprimer: (cle) => window.localStorage.removeItem(cle),
+};
 
 export const CLE_STOCKAGE = "suivi-sport:v1";
 
@@ -66,7 +99,7 @@ function normPari(v: unknown): Pari {
   };
 }
 
-function normJour(date: string, v: unknown): Jour {
+export function normaliserJour(date: string, v: unknown): Jour {
   const base = jourVide(date);
   if (!estObjet(v)) return base;
   const matchs = estObjet(v.matchs) ? v.matchs : {};
@@ -95,7 +128,7 @@ export function normaliserDonnees(brut: unknown): AppData {
   const jours: Record<string, Jour> = {};
   for (const [date, j] of Object.entries(brut.jours)) {
     if (!estDateIso(date)) continue;
-    const jour = normJour(date, j);
+    const jour = normaliserJour(date, j);
     if (!estJourVide(jour)) jours[date] = jour;
   }
   return { version: 1, dateDebut, jours };
@@ -131,32 +164,35 @@ export function importerJSON(texte: string): AppData {
 /* Adaptateur localStorage                                             */
 /* ------------------------------------------------------------------ */
 
+export function lireDonneesLocales(cles: Cles): AppData {
+  let texte: string | null = null;
+  try {
+    texte = cles.lire(CLE_STOCKAGE);
+    if (!texte) return donneesVides();
+    return normaliserDonnees(JSON.parse(texte));
+  } catch {
+    // Données illisibles : on garde une copie de secours avant qu'elles ne soient écrasées.
+    try {
+      if (texte) cles.ecrire(`${CLE_STOCKAGE}:secours`, texte);
+    } catch {
+      /* stockage indisponible */
+    }
+    return donneesVides();
+  }
+}
+
+export function ecrireDonneesLocales(cles: Cles, data: AppData): void {
+  cles.ecrire(CLE_STOCKAGE, JSON.stringify(compacter(data)));
+}
+
 export const localStorageAdapter: StorageAdapter = {
   async charger() {
-    let texte: string | null = null;
-    try {
-      texte = window.localStorage.getItem(CLE_STOCKAGE);
-      if (!texte) return donneesVides();
-      return normaliserDonnees(JSON.parse(texte));
-    } catch {
-      // Données illisibles : on garde une copie de secours avant qu'elles ne soient écrasées.
-      try {
-        if (texte) window.localStorage.setItem(`${CLE_STOCKAGE}:secours`, texte);
-      } catch {
-        /* stockage indisponible */
-      }
-      return donneesVides();
-    }
+    return lireDonneesLocales(clesNavigateur);
   },
   async sauvegarder(data) {
-    window.localStorage.setItem(CLE_STOCKAGE, JSON.stringify(compacter(data)));
+    ecrireDonneesLocales(clesNavigateur, data);
   },
   async effacer() {
-    window.localStorage.removeItem(CLE_STOCKAGE);
+    clesNavigateur.supprimer(CLE_STOCKAGE);
   },
 };
-
-/** Point unique de choix du stockage. */
-export function creerStockage(): StorageAdapter {
-  return localStorageAdapter;
-}
