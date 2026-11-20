@@ -2,7 +2,6 @@
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import CircularProgress from "@mui/material/CircularProgress";
 import InputAdornment from "@mui/material/InputAdornment";
 import type { SxProps, Theme } from "@mui/material/styles";
 import TableContainer from "@mui/material/TableContainer";
@@ -104,14 +103,12 @@ export function Montant({ valeur, sx }: { valeur: number; sx?: SxProps<Theme> })
   );
 }
 
-/** Écran de chargement tant que les données locales ne sont pas lues. */
+/**
+ * Rien à afficher pendant le chargement initial : l'écran de chargement au logo (EcranChargement,
+ * dans Coque) couvre la page tant que les données et la session ne sont pas prêtes.
+ */
 export function Chargement() {
-  return (
-    <Box role="status" sx={{ py: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-      <CircularProgress size={32} />
-      <Typography sx={{ color: "text.secondary" }}>Chargement des données…</Typography>
-    </Box>
-  );
+  return null;
 }
 
 /** Tableau défilant horizontalement, première colonne figée (voir `celluleFigee`). */

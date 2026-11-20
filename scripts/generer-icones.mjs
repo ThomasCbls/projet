@@ -1,35 +1,53 @@
-// Génère les icônes PNG de la PWA à partir du tracé de src/app/icon.svg.
+// Génère les icônes de l'application à partir du logo BetTracker (assets/logo-bettracker.png).
 // Usage : npm run icones   (à relancer si le logo change)
 import { mkdirSync } from "node:fs";
 import sharp from "sharp";
 
-const BLEU = "#1d4ed8";
-const TRACE = '<path d="M14 44l12-12 8 8 16-18" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+const SOURCE = "assets/logo-bettracker.png";
+const FOND = "#07041A"; // jeton « bg » du thème sombre
+const ARRONDI = 0.22; // coins arrondis à ≈ 22 % du côté (charte)
 
-/** Icône 64×64 : `arrondi` = coins arrondis, `echelle` = taille du tracé autour du centre. */
-const svg = ({ arrondi, echelle }) =>
+/** Masque aux coins arrondis : l'extérieur devient transparent. */
+const masque = (taille) =>
   Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">` +
-      `<rect width="64" height="64" rx="${arrondi ? 14 : 0}" fill="${BLEU}"/>` +
-      `<g transform="translate(32 33) scale(${echelle}) translate(-32 -33)">${TRACE}</g>` +
-      `</svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${taille}" height="${taille}">` +
+      `<rect width="${taille}" height="${taille}" rx="${Math.round(taille * ARRONDI)}" fill="#fff"/></svg>`,
   );
 
-const icones = [
-  // « any » : identique au favicon (coins arrondis, fond transparent autour).
-  { fichier: "public/icons/icon-192.png", taille: 192, arrondi: true, echelle: 1 },
-  { fichier: "public/icons/icon-512.png", taille: 512, arrondi: true, echelle: 1 },
-  // « maskable » : fond plein, tracé dans la zone sûre (cercle de 80 %) pour les découpes Android.
-  { fichier: "public/icons/icon-maskable-512.png", taille: 512, arrondi: false, echelle: 0.72 },
-  // iOS arrondit lui-même les coins et refuse la transparence.
-  { fichier: "src/app/apple-icon.png", taille: 180, arrondi: false, echelle: 0.85 },
+/** Logo redimensionné, coins arrondis transparents. */
+const logoArrondi = (taille) =>
+  sharp(SOURCE)
+    .resize(taille, taille, { kernel: "lanczos3" })
+    .composite([{ input: masque(taille), blend: "dest-in" }])
+    .png()
+    .toBuffer();
+
+/** Logo arrondi centré sur un fond plein, à `echelle` du côté. */
+const surFond = async (taille, echelle) => {
+  const cote = Math.round(taille * echelle);
+  return sharp({ create: { width: taille, height: taille, channels: 4, background: FOND } })
+    .composite([{ input: await logoArrondi(cote), gravity: "center" }])
+    .png({ compressionLevel: 9 });
+};
+
+const sorties = [
+  // « any » : logo aux coins arrondis, fond transparent autour.
+  { fichier: "public/icons/icon-192.png", image: async () => sharp(await logoArrondi(192)).png({ compressionLevel: 9 }) },
+  { fichier: "public/icons/icon-512.png", image: async () => sharp(await logoArrondi(512)).png({ compressionLevel: 9 }) },
+  // « maskable » : fond plein, logo dans la zone sûre (cercle de 80 %) pour les découpes Android.
+  { fichier: "public/icons/icon-maskable-512.png", image: () => surFond(512, 0.8) },
+  // iOS arrondit lui-même les coins et refuse la transparence : logo plein cadre.
+  {
+    fichier: "src/app/apple-icon.png",
+    image: async () => sharp(SOURCE).resize(180, 180, { kernel: "lanczos3" }).flatten({ background: FOND }).png(),
+  },
+  // Logo affiché dans l'interface (en-tête, menu, splash, chargement).
+  { fichier: "public/logo/bettracker.png", image: async () => sharp(await logoArrondi(256)).png({ compressionLevel: 9 }) },
 ];
 
 mkdirSync("public/icons", { recursive: true });
-for (const { fichier, taille, ...options } of icones) {
-  await sharp(svg(options), { density: (72 * taille) / 64 })
-    .resize(taille, taille)
-    .png({ compressionLevel: 9 })
-    .toFile(fichier);
-  console.log(`${fichier} (${taille} px)`);
+mkdirSync("public/logo", { recursive: true });
+for (const { fichier, image } of sorties) {
+  await (await image()).toFile(fichier);
+  console.log(fichier);
 }

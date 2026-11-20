@@ -35,11 +35,11 @@ function CarteSynthese({
         <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 500 }}>
           {libelle}
         </Typography>
-        <Avatar variant="rounded" sx={{ width: 32, height: 32, bgcolor: "action.hover", color: "text.secondary" }}>
+        <Avatar variant="rounded" sx={{ width: 32, height: 32, bgcolor: "bt.surfaceRaised", color: "text.secondary", borderRadius: "10px" }}>
           <Icone fontSize="small" />
         </Avatar>
       </Stack>
-      <Typography sx={{ mt: 0.5, fontSize: "2rem", fontWeight: 700, color: couleur }}>{valeur}</Typography>
+      <Typography sx={{ mt: 0.5, fontSize: "2rem", fontWeight: 800, fontVariantNumeric: "tabular-nums", color: couleur }}>{valeur}</Typography>
       {detail && (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {detail}

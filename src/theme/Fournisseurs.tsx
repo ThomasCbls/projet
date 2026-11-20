@@ -9,7 +9,7 @@ import { theme } from "./theme";
 
 export function Fournisseurs({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider theme={theme} defaultMode="system" modeStorageKey={CLE_MODE} disableTransitionOnChange>
+    <ThemeProvider theme={theme} defaultMode="dark" modeStorageKey={CLE_MODE} disableTransitionOnChange>
       <CssBaseline enableColorScheme />
       <SessionProvider>
         <DonneesProvider>{children}</DonneesProvider>

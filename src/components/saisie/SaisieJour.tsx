@@ -20,6 +20,7 @@ import { resumeJour, statsParisJour } from "@/lib/calculs";
 import { ajouterJours, aujourdhuiIso, bornerDate, estDateIso, finPeriode } from "@/lib/dates";
 import { formatDateCourte, formatDateLongue, formatNombre } from "@/lib/format";
 import { type Jour, type Pari, type Resultat, type SportId, type TypeJour, SPORTS } from "@/lib/types";
+import { RappelRisques } from "../Marque";
 import { Chargement, ChampNombre, Montant, Section, masqueVisuel } from "../ui";
 import { CarteSport } from "./CarteSport";
 import { LignePari } from "./LignePari";
@@ -86,7 +87,7 @@ export function SaisieJour() {
               onClick={() => allerA(ajouterJours(date, -1))}
               disabled={date <= debut}
               aria-label="Jour précédent"
-              sx={{ border: 1, borderColor: "divider" }}
+              sx={{ border: 1, borderColor: "bt.lineStrong", bgcolor: "bt.surfaceRaised" }}
             >
               <ChevronLeftRounded />
             </IconButton>
@@ -101,7 +102,7 @@ export function SaisieJour() {
               onClick={() => allerA(ajouterJours(date, 1))}
               disabled={date >= fin}
               aria-label="Jour suivant"
-              sx={{ border: 1, borderColor: "divider" }}
+              sx={{ border: 1, borderColor: "bt.lineStrong", bgcolor: "bt.surfaceRaised" }}
             >
               <ChevronRightRounded />
             </IconButton>
@@ -138,9 +139,10 @@ export function SaisieJour() {
 
       {/* Paris */}
       <Box component="section" aria-labelledby="titre-paris">
-        <Typography id="titre-paris" variant="h5" component="h2" sx={{ mb: 1.5 }}>
+        <Typography id="titre-paris" variant="h5" component="h2" sx={{ mb: 0.5 }}>
           Paris
         </Typography>
+        <RappelRisques sx={{ mb: 1.5, display: { xs: "flex", md: "none" } }} />
         <Card sx={{ p: { xs: 2, sm: 2.5 }, mb: 1.5 }}>
           <Box
             sx={{
@@ -186,8 +188,10 @@ export function SaisieJour() {
                       display: "flex",
                       alignItems: "center",
                       px: 1.5,
-                      borderRadius: 2,
-                      bgcolor: "action.hover",
+                      borderRadius: "12px",
+                      bgcolor: "bt.surfaceRaised",
+                      border: 1,
+                      borderColor: "bt.lineStrong",
                       fontSize: "1.1rem",
                       fontWeight: 700,
                       fontVariantNumeric: "tabular-nums",

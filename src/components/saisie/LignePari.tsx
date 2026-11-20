@@ -11,13 +11,13 @@ import { useId } from "react";
 import { beneficePariSimple, pariSansCote } from "@/lib/calculs";
 import { formatEuro } from "@/lib/format";
 import type { Pari, Resultat } from "@/lib/types";
-import { FOND_GAGNE, FOND_PERDU } from "@/theme/constantes";
+import { styleStatut } from "@/theme/statuts";
 import { ChampNombre, Montant, masqueVisuel } from "../ui";
 
-const OPTIONS: { valeur: Resultat; texte: string; aria: string; fond?: string }[] = [
+const OPTIONS: { valeur: Resultat; texte: string; aria: string; statut?: "success" | "error" }[] = [
   { valeur: "", texte: "–", aria: "Sans résultat" },
-  { valeur: "G", texte: "G", aria: "Gagné", fond: FOND_GAGNE },
-  { valeur: "P", texte: "P", aria: "Perdu", fond: FOND_PERDU },
+  { valeur: "G", texte: "G", aria: "Gagné", statut: "success" },
+  { valeur: "P", texte: "P", aria: "Perdu", statut: "error" },
 ];
 
 /** Gagné / Perdu / sans résultat. */
@@ -45,9 +45,7 @@ export function ChoixResultat({ valeur, onChange }: { valeur: Resultat; onChange
             sx={{
               fontWeight: 700,
               fontSize: "1rem",
-              ...(o.fond && {
-                "&.Mui-selected, &.Mui-selected:hover": { bgcolor: o.fond, color: "#fff", borderColor: o.fond },
-              }),
+              ...(o.statut && { "&.Mui-selected, &.Mui-selected:hover": styleStatut(o.statut) }),
             }}
           >
             {o.texte}
