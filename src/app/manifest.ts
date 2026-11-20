@@ -1,20 +1,22 @@
 import type { MetadataRoute } from "next";
+import { JETONS, NOM_APP, SLOGAN } from "@/theme/constantes";
 
 /** Manifeste de la PWA, servi par Next sur /manifest.webmanifest. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Suivi sport & paris",
-    short_name: "Suivi sport",
-    description: "Suivi quotidien des matchs et des paris sportifs, avec tableau de bord, bilans mensuels et par sport.",
+    name: NOM_APP,
+    short_name: NOM_APP,
+    description: `${SLOGAN} Suivi des matchs et des paris sportifs : tableau de bord, bilans mensuels et par sport.`,
     lang: "fr",
     dir: "ltr",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "any",
-    background_color: "#f4f5f7",
-    theme_color: "#ffffff",
+    // Sombre par défaut : écran de lancement et barre système au fond « nuit ».
+    background_color: JETONS.dark.bg,
+    theme_color: JETONS.dark.bg,
     categories: ["sports", "finance", "productivity"],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

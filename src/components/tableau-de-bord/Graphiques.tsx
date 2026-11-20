@@ -28,6 +28,7 @@ const styleAxes = {
   "& .MuiChartsGrid-line": { stroke: "var(--mui-palette-divider)" },
   "& .MuiChartsAxis-line": { stroke: "var(--mui-palette-divider)" },
   "& .MuiChartsAxis-tick": { stroke: "var(--mui-palette-divider)" },
+  "& .MuiChartsAxis-tickLabel": { fill: "var(--mui-palette-text-secondary)" },
 };
 
 /** « +12 € » sans décimales inutiles pour les graduations. */
@@ -54,8 +55,8 @@ export function GraphiqueVide({ hauteur, texte }: { hauteur: number; texte: stri
         placeItems: "center",
         border: 1,
         borderStyle: "dashed",
-        borderColor: "divider",
-        borderRadius: 2,
+        borderColor: "bt.lineStrong",
+        borderRadius: "12px",
         px: 2,
         textAlign: "center",
       }}
@@ -115,12 +116,12 @@ export function GraphBeneficeCumule({ points, hauteur = 300 }: { points: PointCu
       ]}
       sx={{
         ...styleAxes,
-        [`& .${lineClasses.area}`]: { fillOpacity: 0.12 },
-        [`& .${lineClasses.line}`]: { strokeWidth: 2 },
+        [`& .${lineClasses.area}`]: { fillOpacity: 0.16 },
+        [`& .${lineClasses.line}`]: { strokeWidth: 2.5 },
         [`& .${lineClasses.mark}`]: { stroke: "var(--mui-palette-background-paper)", strokeWidth: 2 },
       }}
     >
-      <ChartsReferenceLine y={0} lineStyle={{ stroke: "var(--mui-palette-text-secondary)", strokeDasharray: "4 4" }} />
+      <ChartsReferenceLine y={0} lineStyle={{ stroke: "var(--mui-palette-bt-lineStrong)", strokeDasharray: "4 4" }} />
     </LineChart>
   );
 }
@@ -155,7 +156,7 @@ export function GraphBeneficeParMois({ mois, hauteur = 280 }: { mois: LigneBilan
       ]}
       sx={{ ...styleAxes, ...styleBarres }}
     >
-      <ChartsReferenceLine y={0} lineStyle={{ stroke: "var(--mui-palette-text-secondary)" }} />
+      <ChartsReferenceLine y={0} lineStyle={{ stroke: "var(--mui-palette-bt-lineStrong)" }} />
     </BarChart>
   );
 }
@@ -262,10 +263,10 @@ export function JaugeReussite({ valeur, libelle }: { valeur: number | null; libe
       aria-label={`${libelle} : ${formatPct(valeur)}`}
       sx={{
         [`& .${gaugeClasses.valueArc}`]: { fill: c.serie },
-        [`& .${gaugeClasses.referenceArc}`]: { fill: "var(--mui-palette-action-hover)" },
+        [`& .${gaugeClasses.referenceArc}`]: { fill: "var(--mui-palette-bt-surfaceRaised)" },
         [`& .${gaugeClasses.valueText} text`]: {
           fontSize: 22,
-          fontWeight: 700,
+          fontWeight: 800,
           fill: "var(--mui-palette-text-primary)",
         },
       }}

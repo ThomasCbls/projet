@@ -22,11 +22,13 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useMemo } from "react";
+import { RappelRisques } from "@/components/Marque";
 import { Chargement, EnTetePage, Montant, Section } from "@/components/ui";
 import { useDonnees } from "@/hooks/useDonnees";
 import { aujourdhuiIso, finPeriode } from "@/lib/dates";
 import { formatDateCourte, formatEuro, formatEuroSigne, formatPct } from "@/lib/format";
 import { tableauDeBord } from "@/lib/tableauDeBord";
+import { DEGRADE_MARQUE } from "@/theme/constantes";
 import {
   GraphBeneficeCumule,
   GraphBeneficeParMois,
@@ -34,7 +36,6 @@ import {
   GraphReussiteParSport,
   JaugeReussite,
   MiniCourbe,
-  useCouleurs,
 } from "./Graphiques";
 
 function Tuile({
@@ -43,6 +44,7 @@ function Tuile({
   couleur,
   detail,
   Icone,
+  hero,
   children,
 }: {
   libelle: string;
@@ -50,23 +52,45 @@ function Tuile({
   couleur?: string;
   detail?: React.ReactNode;
   Icone: typeof TrendingUpRounded;
+  /** Variante héros (dégradé de marque) : une seule tuile par écran. */
+  hero?: boolean;
   children?: React.ReactNode;
 }) {
   return (
-    <Card sx={{ p: 2.5, height: "100%", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        p: 2.5,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        ...(hero && { background: DEGRADE_MARQUE, borderColor: "transparent", color: "#fff" }),
+      }}
+    >
       <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 500 }}>
+        <Typography variant="body2" sx={{ color: hero ? "rgba(255,255,255,.88)" : "text.secondary", fontWeight: 600 }}>
           {libelle}
         </Typography>
-        <Avatar variant="rounded" sx={{ width: 32, height: 32, bgcolor: "action.hover", color: "text.secondary" }}>
+        <Avatar
+          variant="rounded"
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: "10px",
+            bgcolor: hero ? "rgba(255,255,255,.16)" : "bt.surfaceRaised",
+            color: hero ? "#fff" : "text.secondary",
+          }}
+        >
           <Icone fontSize="small" />
         </Avatar>
       </Stack>
-      <Typography sx={{ fontSize: { xs: "1.75rem", sm: "2rem" }, fontWeight: 700, lineHeight: 1.15, color: couleur }}>
+      {/* stat-xl : Inter 800, chiffres tabulaires */}
+      <Typography
+        sx={{ fontSize: "2rem", fontWeight: 800, lineHeight: 36 / 32, fontVariantNumeric: "tabular-nums", color: hero ? "#fff" : couleur }}
+      >
         {valeur}
       </Typography>
       {detail && (
-        <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+        <Typography variant="body2" sx={{ color: hero ? "rgba(255,255,255,.88)" : "text.secondary", mt: 0.5 }}>
           {detail}
         </Typography>
       )}
@@ -81,7 +105,7 @@ function Barre({ valeur, libelle }: { valeur: number | null; libelle: string }) 
       variant="determinate"
       value={valeur === null ? 0 : valeur * 100}
       aria-label={libelle}
-      sx={{ height: 8, borderRadius: 4, bgcolor: "action.hover", "& .MuiLinearProgress-bar": { borderRadius: 4 } }}
+      sx={{ height: 8, borderRadius: 4, "& .MuiLinearProgress-bar": { borderRadius: 4 } }}
     />
   );
 }
@@ -96,12 +120,10 @@ function LienSection({ href, children }: { href: string; children: React.ReactNo
 
 export function TableauDeBord() {
   const { data } = useDonnees();
-  const couleurs = useCouleurs();
   const t = useMemo(() => (data ? tableauDeBord(data, aujourdhuiIso()) : null), [data]);
   if (!data || !t) return <Chargement />;
 
   const { synthese: s } = t;
-  const ben = Math.round(s.totalBenefice * 100) / 100;
   const parisTranches = s.parisGagnes + s.parisPerdus;
 
   return (
@@ -110,11 +132,21 @@ export function TableauDeBord() {
         titre="Tableau de bord"
         sousTitre={`Du ${formatDateCourte(data.dateDebut)} au ${formatDateCourte(finPeriode(data.dateDebut))} · ${t.joursSaisis} jour${t.joursSaisis > 1 ? "s" : ""} saisi${t.joursSaisis > 1 ? "s" : ""}`}
         action={
-          <Button component={Link} href="/saisie" variant="contained" startIcon={<EditNoteRounded />}>
+          // Sur mobile, le bouton « + » de la barre d'onglets est déjà l'action principale.
+          <Button
+            component={Link}
+            href="/saisie"
+            variant="contained"
+            startIcon={<EditNoteRounded />}
+            sx={{ display: { xs: "none", md: "inline-flex" } }}
+          >
             Saisir aujourd&apos;hui
           </Button>
         }
       />
+
+      {/* Sur grand écran, le menu latéral affiche déjà le rappel. */}
+      <RappelRisques sx={{ mt: -1.5, mb: 3, display: { xs: "flex", md: "none" } }} />
 
       {t.joursSaisis === 0 && (
         <Alert severity="info" sx={{ mb: 3 }}>
@@ -129,11 +161,11 @@ export function TableauDeBord() {
           <Tuile
             libelle="Bénéfice / perte"
             Icone={TrendingUpRounded}
+            hero
             valeur={formatEuroSigne(s.totalBenefice)}
-            couleur={ben > 0 ? "success.main" : ben < 0 ? "error.main" : undefined}
             detail={t.roi === null ? "Aucune mise" : `Rendement ${formatPct(t.roi)} des mises`}
           >
-            <MiniCourbe valeurs={t.cumul.map((p) => p.cumul)} couleur={couleurs.serie} />
+            <MiniCourbe valeurs={t.cumul.map((p) => p.cumul)} couleur="#fff" />
           </Tuile>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -189,7 +221,7 @@ export function TableauDeBord() {
             <Divider sx={{ my: 2 }} />
             <Stack spacing={1.5}>
               <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
-                <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "action.hover", color: "text.secondary" }}>
+                <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "bt.surfaceRaised", color: "marque.gold" }}>
                   <EmojiEventsOutlined fontSize="small" />
                 </Avatar>
                 <Box sx={{ minWidth: 0 }}>
@@ -202,7 +234,7 @@ export function TableauDeBord() {
                 </Box>
               </Stack>
               <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }}>
-                <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "action.hover", color: "text.secondary" }}>
+                <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "bt.surfaceRaised", color: "text.secondary" }}>
                   <SportsScoreOutlined fontSize="small" />
                 </Avatar>
                 <Box>
@@ -259,7 +291,7 @@ export function TableauDeBord() {
             ) : (
               <List disablePadding sx={{ mx: -1 }}>
                 {t.derniersJours.map((r) => (
-                  <ListItemButton key={r.date} component={Link} href={`/saisie?date=${r.date}`} sx={{ borderRadius: 2 }}>
+                  <ListItemButton key={r.date} component={Link} href={`/saisie?date=${r.date}`} sx={{ borderRadius: "12px" }}>
                     <ListItemText
                       primary={formatDateCourte(r.date)}
                       secondary={
