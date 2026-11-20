@@ -255,7 +255,7 @@ export default function PageReglages() {
                 variant="contained"
                 startIcon={<FileDownloadOutlined />}
                 onClick={() => {
-                  telecharger(`suivi-sport-${aujourdhuiIso()}.json`, exporterJSON(data));
+                  telecharger(`bettracker-${aujourdhuiIso()}.json`, exporterJSON(data));
                   setMessage({ type: "success", texte: "Export JSON téléchargé." });
                 }}
               >

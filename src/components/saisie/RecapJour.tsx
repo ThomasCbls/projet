@@ -6,11 +6,11 @@ import { Montant } from "../ui";
 
 function Stat({ libelle, children }: { libelle: string; children: React.ReactNode }) {
   return (
-    <Box sx={{ borderRadius: 2, bgcolor: "action.hover", px: 1.5, py: 1.25 }}>
+    <Box sx={{ borderRadius: "12px", bgcolor: "bt.surfaceRaised", px: 1.5, py: 1.25 }}>
       <Typography component="dt" variant="caption" sx={{ color: "text.secondary" }}>
         {libelle}
       </Typography>
-      <Typography component="dd" sx={{ m: 0, fontSize: "1.2rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+      <Typography component="dd" sx={{ m: 0, fontSize: "1.2rem", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
         {children}
       </Typography>
     </Box>

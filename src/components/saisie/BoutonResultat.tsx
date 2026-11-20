@@ -4,7 +4,7 @@ import ButtonBase from "@mui/material/ButtonBase";
 import { styled } from "@mui/material/styles";
 import { memo } from "react";
 import type { Resultat } from "@/lib/types";
-import { FOND_GAGNE, FOND_PERDU } from "@/theme/constantes";
+import { styleStatut } from "@/theme/statuts";
 
 const SUIVANT: Record<Resultat, Resultat> = { "": "G", G: "P", P: "" };
 const LIBELLE: Record<Resultat, string> = { "": "vide", G: "gagné", P: "perdu" };
@@ -19,16 +19,16 @@ const Case = styled(ButtonBase)(({ theme }) => ({
   fontWeight: 700,
   userSelect: "none",
   border: "2px dashed",
-  borderColor: (theme.vars ?? theme).palette.divider,
+  borderColor: "var(--mui-palette-bt-lineStrong)",
   color: (theme.vars ?? theme).palette.text.secondary,
   transition: "background-color 120ms, transform 80ms",
   "&:active": { transform: "scale(0.95)" },
   "&:hover": { borderColor: (theme.vars ?? theme).palette.text.secondary },
-  '&[data-resultat="G"]': { backgroundColor: FOND_GAGNE, borderColor: FOND_GAGNE, borderStyle: "solid", color: "#fff" },
-  '&[data-resultat="P"]': { backgroundColor: FOND_PERDU, borderColor: FOND_PERDU, borderStyle: "solid", color: "#fff" },
+  '&[data-resultat="G"]': styleStatut("success"),
+  '&[data-resultat="P"]': styleStatut("error"),
 }));
 
-/** Case de match : vide → G (vert) → P (rouge) → vide. */
+/** Case de match : vide → G (win) → P (loss) → vide. La lettre porte le statut, pas seulement la couleur. */
 export const BoutonResultat = memo(function BoutonResultat({
   valeur,
   onChange,

@@ -8,7 +8,8 @@ Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules
 - Données stockées dans le **navigateur** (localStorage), avec export et import JSON
 - **Synchronisation entre appareils** (optionnelle) avec un compte **Supabase** : voir §4
 - Sans variable d'environnement, l'application reste 100 % locale : `npm install && npm run build` fonctionne tel quel
-- Mobile d'abord, thème clair/sombre, interface entièrement en français
+- Mobile d'abord, thème sombre par défaut (clair disponible), interface entièrement en français
+- Identité visuelle : charte graphique BetTracker v1.0 (couleurs et jetons dans `src/theme/constantes.ts`, thème MUI dans `src/theme/theme.ts`, polices Exo 2 et Inter)
 - **Application installable (PWA)**, utilisable **hors connexion** (voir §3)
 
 ---
@@ -75,7 +76,7 @@ Fichiers concernés :
 - `src/app/sw.ts` : service worker, compilé par [Serwist](https://serwist.pages.dev) vers `public/sw.js` ;
 - `src/components/Pwa.tsx` : enregistrement et message de mise à jour.
 
-Les icônes de `public/icons/` se régénèrent avec `npm run icones`.
+Les icônes de `public/icons/`, `src/app/apple-icon.png` et le logo de l'interface (`public/logo/`) se régénèrent avec `npm run icones` à partir de `assets/logo-bettracker.png`.
 
 ---
 
