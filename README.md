@@ -13,6 +13,7 @@ Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules
 - Mobile d'abord, thème sombre par défaut (clair disponible), interface entièrement en français
 - Identité visuelle : charte graphique BetTracker v1.0 (couleurs et jetons dans `src/theme/constantes.ts`, thème MUI dans `src/theme/theme.ts`, polices Exo 2 et Inter)
 - **Application installable (PWA)**, utilisable **hors connexion** (voir §3)
+- **Import d'un pari depuis une capture d'écran** (Unibet…), lue sur l'appareil, sans envoi en ligne (voir §3)
 
 ---
 
@@ -77,6 +78,15 @@ Fichiers concernés :
 - `src/app/manifest.ts` : nom, couleurs et icônes ;
 - `src/app/sw.ts` : service worker, compilé par [Serwist](https://serwist.pages.dev) vers `public/sw.js` ;
 - `src/components/Pwa.tsx` : enregistrement et message de mise à jour.
+
+### Importer un pari depuis une capture d'écran
+
+Dans **Saisie**, le bouton **Importer une capture** lit une capture du récapitulatif de pari (Unibet par exemple). Il en tire la date, le type (simple ou combiné), la mise, la cote, le résultat (gagné ou perdu), le match et le sport. Une fenêtre affiche ces valeurs **à vérifier** : les champs en orange n'ont pas été lus avec certitude. Le pari est ensuite ajouté au premier emplacement libre du jour concerné.
+
+- La lecture se fait **sur l'appareil** avec [Tesseract.js](https://tesseract.projectnaptha.com) : l'image n'est envoyée nulle part. Au premier import, le moteur (environ 5 Mo) est téléchargé, puis il reste en cache et fonctionne hors connexion.
+- **Android** : l'application installée apparaît dans le menu **Partager** de la galerie ou de l'application du bookmaker. Partager la capture vers BetTracker ouvre directement la vérification. Ce n'est pas possible sur iPhone, où l'on passe par le bouton.
+- La lecture n'est pas infaillible : vérifiez toujours avant de valider. Le sport est deviné d'après la compétition (« D1 », « ATP », « NBA »…). La mise et la cote sont contrôlées avec le gain affiché (gain = mise × cote).
+- Les fichiers du moteur sont copiés de `node_modules` vers `public/tesseract/` par `scripts/copier-tesseract.mjs`, lancé automatiquement avant `npm run dev` et `npm run build`.
 
 Les icônes de `public/icons/`, `src/app/apple-icon.png` et le logo de l'interface (`public/logo/`) se régénèrent avec `npm run icones` à partir de `assets/logo-bettracker.png`.
 
@@ -215,11 +225,14 @@ src/
    ├─ dates.ts            dates ISO en UTC (période, mois, jours actifs)
    ├─ format.ts           formats français (1 234,50 €, Mer 18 nov. 2026, 66,7 %)
    ├─ storage.ts          couche d'accès aux données (localStorage, import/export)
+   ├─ lectureCapture.ts   analyse du texte d'une capture de pari et import dans un jour (testé)
+   ├─ ocr.ts              lecture d'une capture dans le navigateur (Tesseract.js)
    ├─ types.ts            modèle de données
    └─ __tests__/          tests Vitest
 public/icons/             icônes de l'application installable
 scripts/import-excel.mjs  conversion Excel → JSON
 scripts/generer-icones.mjs  génération des icônes PNG
+scripts/copier-tesseract.mjs  copie du moteur OCR vers public/tesseract/
 ```
 
 ### Passer à un stockage en ligne (Vercel KV, Supabase…)

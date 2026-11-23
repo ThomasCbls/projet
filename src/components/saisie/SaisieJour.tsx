@@ -23,6 +23,7 @@ import { type Jour, type Pari, type Resultat, type SportId, type TypeJour, SPORT
 import { RappelRisques } from "../Marque";
 import { Chargement, ChampNombre, Montant, Section, masqueVisuel } from "../ui";
 import { CarteSport } from "./CarteSport";
+import { ImportCapture } from "./ImportCapture";
 import { LignePari } from "./LignePari";
 import { RecapJour } from "./RecapJour";
 
@@ -143,6 +144,9 @@ export function SaisieJour() {
           Paris
         </Typography>
         <RappelRisques sx={{ mb: 1.5, display: { xs: "flex", md: "none" } }} />
+        <Box sx={{ mb: 1.5 }}>
+          <ImportCapture date={date} allerA={allerA} />
+        </Box>
         <Card sx={{ p: { xs: 2, sm: 2.5 }, mb: 1.5 }}>
           <Box
             sx={{

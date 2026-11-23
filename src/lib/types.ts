@@ -115,11 +115,14 @@ export function donneesVides(dateDebut: string = DATE_DEBUT_DEFAUT): AppData {
   return { version: 1, dateDebut, jours: {} };
 }
 
+/** Aucun champ du pari n'est renseigné. */
+export function pariEstVide(p: Pari): boolean {
+  return p.equipes.trim() === "" && p.mise === null && p.cote === null && p.resultat === "" && p.sport === "";
+}
+
 /** Un jour ne contient aucune saisie (inutile de le stocker). */
 export function estJourVide(j: Jour): boolean {
   const matchsVides = SPORTS.every((s) => j.matchs[s.id].every((r) => r === ""));
-  const parisVides = j.paris.every(
-    (p) => p.equipes.trim() === "" && p.mise === null && p.cote === null && p.resultat === "" && p.sport === "",
-  );
+  const parisVides = j.paris.every(pariEstVide);
   return matchsVides && parisVides && j.type === "simple" && j.miseCombine === null && j.mouvements.length === 0;
 }

@@ -160,6 +160,7 @@ export function ChampNombre({
   suffixe,
   placeholder,
   disabled,
+  sx,
 }: {
   libelle: string;
   valeur: number | null;
@@ -167,6 +168,7 @@ export function ChampNombre({
   suffixe?: string;
   placeholder?: string;
   disabled?: boolean;
+  sx?: SxProps<Theme>;
 }) {
   const versTexte = (v: number | null) => (v === null ? "" : formatNombre(v).replace(/\s/g, ""));
   const [texte, setTexte] = useState(versTexte(valeur));
@@ -186,6 +188,7 @@ export function ChampNombre({
       placeholder={placeholder}
       disabled={disabled}
       error={invalide}
+      sx={sx}
       autoComplete="off"
       onChange={(e) => {
         setTexte(e.target.value);

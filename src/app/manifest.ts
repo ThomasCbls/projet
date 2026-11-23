@@ -18,12 +18,14 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: JETONS.dark.bg,
     theme_color: JETONS.dark.bg,
     categories: ["sports", "finance", "productivity"],
-    // Fait apparaître BetTracker dans la feuille de partage (Android/Chrome uniquement :
-    // iOS ne gère pas share_target, il passe par un Raccourci, voir le README).
+    // Fait apparaître BetTracker dans la feuille de partage (Android/Chrome uniquement, iOS ne gère
+    // pas share_target) : une capture de pari partagée est lue par le service worker (app/sw.ts),
+    // puis préremplie dans la page de saisie.
     share_target: {
-      action: "/saisie",
-      method: "GET",
-      params: { title: "titre", text: "texte", url: "lien" },
+      action: "/partage",
+      method: "POST",
+      enctype: "multipart/form-data",
+      params: { title: "titre", text: "texte", url: "lien", files: [{ name: "image", accept: ["image/*"] }] },
     },
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

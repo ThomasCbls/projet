@@ -21,6 +21,8 @@ const eslintConfig = [
       // Service worker généré par @serwist/next au build.
       "public/sw.js",
       "public/swe-worker-*.js",
+      // Moteur OCR copié depuis node_modules (scripts/copier-tesseract.mjs).
+      "public/tesseract/**",
     ],
   },
 ];

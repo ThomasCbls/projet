@@ -25,6 +25,9 @@
 /public/sw.js.map
 /public/swe-worker-*.js
 
+# moteur OCR (copié depuis node_modules par scripts/copier-tesseract.mjs)
+/public/tesseract/
+
 # misc
 .DS_Store
 *.pem
