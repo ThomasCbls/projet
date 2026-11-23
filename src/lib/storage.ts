@@ -10,14 +10,18 @@ import { estDateIso } from "./dates";
 import {
   type AppData,
   type Jour,
+  type Mouvement,
   type Pari,
   type Resultat,
+  type TypeMouvement,
   DATE_DEBUT_DEFAUT,
   NB_MATCHS_PAR_SPORT,
   NB_PARIS_PAR_JOUR,
   SPORTS,
+  TYPES_MOUVEMENT,
   donneesVides,
   estJourVide,
+  estSportPari,
   jourVide,
 } from "./types";
 
@@ -96,6 +100,22 @@ function normPari(v: unknown): Pari {
     mise: normNombre(o.mise),
     cote: normNombre(o.cote),
     resultat: normResultat(o.resultat),
+    sport: estSportPari(o.sport) ? o.sport : "",
+  };
+}
+
+const estTypeMouvement = (v: unknown): v is TypeMouvement => TYPES_MOUVEMENT.some((t) => t.id === v);
+
+/** Mouvement de capital valide, ou null (type inconnu, montant absent ou ≤ 0). */
+function normMouvement(v: unknown, i: number): Mouvement | null {
+  if (!estObjet(v) || !estTypeMouvement(v.type)) return null;
+  const montant = normNombre(v.montant);
+  if (montant === null || montant <= 0) return null;
+  return {
+    id: typeof v.id === "string" && v.id !== "" ? v.id : `m${i}`,
+    type: v.type,
+    montant,
+    note: typeof v.note === "string" ? v.note : "",
   };
 }
 
@@ -112,6 +132,8 @@ export function normaliserJour(date: string, v: unknown): Jour {
   const type = typeof v.type === "string" ? v.type.toLowerCase() : "";
   base.type = type === "combine" || type === "combiné" ? "combine" : "simple";
   base.miseCombine = normNombre(v.miseCombine);
+  const mouvements = Array.isArray(v.mouvements) ? v.mouvements : [];
+  base.mouvements = mouvements.map(normMouvement).filter((m): m is Mouvement => m !== null);
   return base;
 }
 

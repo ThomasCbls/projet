@@ -19,12 +19,12 @@ export function useCouleurs() {
 }
 
 /** Barres fines aux extrémités arrondies, espace de 2px (couleur du fond) entre segments empilés. */
-const styleBarres = {
+export const styleBarres = {
   [`& .${barClasses.element}`]: { stroke: "var(--mui-palette-background-paper)", strokeWidth: 2 },
 };
 
 /** Grille et axes discrets. */
-const styleAxes = {
+export const styleAxes = {
   "& .MuiChartsGrid-line": { stroke: "var(--mui-palette-divider)" },
   "& .MuiChartsAxis-line": { stroke: "var(--mui-palette-divider)" },
   "& .MuiChartsAxis-tick": { stroke: "var(--mui-palette-divider)" },
@@ -32,13 +32,13 @@ const styleAxes = {
 };
 
 /** « +12 € » sans décimales inutiles pour les graduations. */
-const euroCourt = (v: number) => formatEuro(v).replace(/,00(?=\s?€)/, "");
+export const euroCourt = (v: number) => formatEuro(v).replace(/,00(?=\s?€)/, "");
 
 /** « 2026-11 » → « nov. » (l'année reste dans l'infobulle). */
-const moisSeul = (cle: string) => formatMoisCourt(cle).split(" ")[0];
+export const moisSeul = (cle: string) => formatMoisCourt(cle).split(" ")[0];
 
 /** Axe des mois : nom court en graduation, mois complet dans l'infobulle. */
-const axeMois = (mois: LigneBilan[]) => ({
+export const axeMois = (mois: { mois: string }[]) => ({
   scaleType: "band" as const,
   data: mois.map((l) => l.mois),
   valueFormatter: (m: string, ctx: { location: string }) => (ctx.location === "tick" ? moisSeul(m) : formatMoisLong(m)),

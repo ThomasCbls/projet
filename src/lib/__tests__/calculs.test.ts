@@ -20,6 +20,7 @@ const pari = (mise: number | null, cote: number | null, resultat: Pari["resultat
   mise,
   cote,
   resultat,
+  sport: "",
 });
 
 function jourAvec(date: string, modif: (j: Jour) => void): Jour {

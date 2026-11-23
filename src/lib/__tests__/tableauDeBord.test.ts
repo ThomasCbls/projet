@@ -31,9 +31,9 @@ describe("tableau de bord", () => {
     const t = tableauDeBord(
       donnees([
         jourAvec("2026-11-18", (j) => {
-          j.paris[0] = { equipes: "A", mise: 10, cote: 2, resultat: "G" }; // +10
-          j.paris[1] = { equipes: "B", mise: 10, cote: 3, resultat: "P" }; // −10
-          j.paris[2] = { equipes: "C", mise: 20, cote: 1.5, resultat: "G" }; // +10
+          j.paris[0] = { equipes: "A", mise: 10, cote: 2, resultat: "G", sport: "" }; // +10
+          j.paris[1] = { equipes: "B", mise: 10, cote: 3, resultat: "P", sport: "" }; // −10
+          j.paris[2] = { equipes: "C", mise: 20, cote: 1.5, resultat: "G", sport: "" }; // +10
         }),
       ]),
       "2026-11-18",

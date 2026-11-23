@@ -5,6 +5,8 @@ Elle remplace le classeur `suivi_sport_annuel.xlsx` et en reproduit les formules
 
 - **Next.js 15** (App Router) + **TypeScript**, interface **MUI (Material UI) 9**, graphiques **MUI X Charts**
 - Page d'accueil : **tableau de bord** (indicateurs clés, bénéfice cumulé, jauges de réussite, bénéfice et matchs par mois, réussite par sport, derniers jours saisis)
+- Module **Rentabilité** : ROI global, ROI des simples et des combinés, ROI par sport, bénéfices et pertes, cote moyenne, taux de réussite, mois par mois, avec points forts et points faibles
+- Module **Capital** : taux de capitalisation, avec ce qui a été gagné, réinvesti, sécurisé et retiré, le capital actif et l'évolution du patrimoine
 - Données stockées dans le **navigateur** (localStorage), avec export et import JSON
 - **Synchronisation entre appareils** (optionnelle) avec un compte **Supabase** : voir §4
 - Sans variable d'environnement, l'application reste 100 % locale : `npm install && npm run build` fonctionne tel quel
@@ -142,6 +144,36 @@ Le script lit la date de début (`Bilan!B3`), les matchs (`Suivi!D:AQ`), les par
 | Combiné : total misé, paris G/P | total misé = mise combiné ; le combiné compte pour **un seul** pari (1 ou 0) |
 | Type du jour vide | traité comme « Simple » (comme dans Excel) |
 
+### Rentabilité (ROI)
+
+| Élément | Règle |
+|---|---|
+| Pari pris en compte | uniquement les paris **tranchés** (G ou P) ; la mise d'un pari sans résultat est affichée à part (« en cours ») |
+| Total des mises | somme des mises des paris tranchés (un combiné : sa mise) |
+| Gains encaissés | mise + bénéfice de chaque pari tranché (0 pour un pari perdu) |
+| Bénéfice net | gains encaissés − total des mises |
+| ROI | bénéfice net ÷ total des mises × 100 |
+| Cote moyenne | moyenne des cotes renseignées (cote combinée pour un combiné) |
+| Taux de réussite | paris gagnés ÷ paris tranchés (un combiné compte pour un pari) |
+| Sport d'un pari | choisi dans la saisie (sports suivis + Rugby + Autre) ; un combiné prend le sport commun à ses sélections, sinon « Multi-sports » |
+| Points forts / faibles | segments sport × type (simple / combiné) d'au moins 3 paris : meilleur ROI bénéficiaire, et plus forte perte avec le ROI global qu'on aurait sans eux |
+
+### Capital
+
+Les mouvements (dépôt, retrait, mise en sécurité, réinjection) sont saisis dans **Capital** et enregistrés avec le jour concerné (ils sont donc synchronisés comme les autres saisies).
+
+| Élément | Règle |
+|---|---|
+| Gagné | bénéfice net des paris (comme dans le bilan) |
+| Sécurisé | mises en sécurité − réinjections |
+| Retiré | somme des retraits |
+| Capital actif | dépôts + gagné − retiré − sécurisé |
+| Patrimoine | capital actif + sécurisé |
+| Capitalisé | min(gagné ; sécurisé + retiré) : part des gains mise à l'abri |
+| Réinvesti | gagné − capitalisé : part des gains laissée en jeu |
+| Taux de capitalisation | capitalisé ÷ gagné (« – » sans gain) |
+| Progression | (patrimoine + retiré − dépôts) ÷ dépôts |
+
 Cas particulier hérité d'Excel : une cellule vide vaut 0 dans un calcul. Un pari simple **gagné sans cote** rapporte donc −mise. L'application affiche alors un avertissement « Cote manquante ».
 
 Différence volontaire avec Excel : changer la date de début **ne décale pas** les saisies, qui restent attachées à leur date. Dans Excel, elles étaient attachées à la ligne.
@@ -159,6 +191,8 @@ src/
 │  ├─ saisie/             Saisie du jour (?date=AAAA-MM-JJ)
 │  ├─ historique/         Historique jour par jour, filtre par mois
 │  ├─ bilan/              Synthèse, bilan par mois et par sport
+│  ├─ rentabilite/        ROI global, simples / combinés, par sport, par mois
+│  ├─ capital/            Taux de capitalisation, mouvements de capital, patrimoine
 │  ├─ sports/             Matrices sport × mois (gagnés, perdus, %) en onglets
 │  └─ reglages/           Date de début, thème, export/import JSON, réinitialisation
 ├─ components/
@@ -166,6 +200,8 @@ src/
 │  ├─ Pwa.tsx             enregistrement du service worker, message « Nouvelle version »
 │  ├─ tableau-de-bord/    tableau de bord et graphiques MUI X Charts
 │  ├─ saisie/ bilan/      composants des pages
+│  ├─ rentabilite/ capital/  pages et graphiques des modules Rentabilité et Capital
+│  ├─ Indicateurs.tsx     tuile d'indicateur, barre de progression, lien de section
 │  └─ ui.tsx              briques communes (sections, montants, champ numérique…)
 ├─ theme/                 thème MUI clair/sombre (variables CSS), couleurs des graphiques
 ├─ hooks/
@@ -174,6 +210,8 @@ src/
 └─ lib/
    ├─ calculs.ts          toutes les formules (fonctions pures, testées)
    ├─ tableauDeBord.ts    indicateurs du tableau de bord (testés)
+   ├─ rentabilite.ts      ROI par type, par sport et par mois (testés)
+   ├─ capital.ts          taux de capitalisation et patrimoine (testés)
    ├─ dates.ts            dates ISO en UTC (période, mois, jours actifs)
    ├─ format.ts           formats français (1 234,50 €, Mer 18 nov. 2026, 66,7 %)
    ├─ storage.ts          couche d'accès aux données (localStorage, import/export)

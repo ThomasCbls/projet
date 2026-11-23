@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useMemo } from "react";
 import { TableauMensuel, TableauSports } from "@/components/bilan/Tableaux";
+import { LienSection } from "@/components/Indicateurs";
 import { Chargement, EnTetePage, Section } from "@/components/ui";
 import { useDonnees } from "@/hooks/useDonnees";
 import { bilanParMois, bilanParSport, syntheseAnnuelle } from "@/lib/calculs";
@@ -96,6 +97,22 @@ export default function PageBilan() {
             <TableauSports lignes={sports} />
           </Section>
         </Grid>
+        {/* Accès mobile aux modules (sur grand écran, ils sont dans le menu latéral). */}
+        {[
+          { href: "/rentabilite", titre: "Rentabilité", lien: "ROI", texte: "ROI global, simples, combinés et par sport, mois par mois." },
+          { href: "/capital", titre: "Capital", lien: "Capital", texte: "Taux de capitalisation : gagné, réinvesti, sécurisé, retiré." },
+        ].map((m) => (
+          <Grid key={m.href} size={{ xs: 12, sm: 6 }} sx={{ display: { md: "none" } }}>
+            <Section
+              titre={m.titre}
+              sousTitre={m.texte}
+              action={<LienSection href={m.href}>{m.lien}</LienSection>}
+              sx={{ "& > :first-of-type": { mb: 0 } }}
+            >
+              {null}
+            </Section>
+          </Grid>
+        ))}
       </Grid>
     </>
   );

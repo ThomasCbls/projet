@@ -4,6 +4,8 @@ import AddRounded from "@mui/icons-material/AddRounded";
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 import HomeOutlined from "@mui/icons-material/HomeOutlined";
+import PercentRounded from "@mui/icons-material/PercentRounded";
+import SavingsOutlined from "@mui/icons-material/SavingsOutlined";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
 import SportsSoccerOutlined from "@mui/icons-material/SportsSoccerOutlined";
 import AppBar from "@mui/material/AppBar";
@@ -55,11 +57,13 @@ const LIENS = [
   { href: "/saisie", libelle: "Saisie du jour", court: "Saisie", Icone: AddRounded, mobile: true, central: true },
   { href: "/bilan", libelle: "Bilan", court: "Bilan", Icone: BarChartRounded, mobile: true },
   { href: "/sports", libelle: "Par sport", court: "Sports", Icone: SportsSoccerOutlined, mobile: true },
+  { href: "/rentabilite", libelle: "Rentabilité", court: "ROI", Icone: PercentRounded, mobile: false },
+  { href: "/capital", libelle: "Capital", court: "Capital", Icone: SavingsOutlined, mobile: false },
   { href: "/reglages", libelle: "Réglages", court: "Réglages", Icone: SettingsOutlined, mobile: false },
 ];
 
 /** Menu latéral : saisie en premier après l'accueil. */
-const ORDRE_MENU = ["/", "/saisie", "/historique", "/bilan", "/sports", "/reglages"];
+const ORDRE_MENU = ["/", "/saisie", "/historique", "/bilan", "/rentabilite", "/capital", "/sports", "/reglages"];
 
 const estActif = (chemin: string, href: string) => (href === "/" ? chemin === "/" : chemin.startsWith(href));
 

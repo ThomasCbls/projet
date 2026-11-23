@@ -24,6 +24,13 @@ export function formatPct(p: number | null): string {
   return p === null || !Number.isFinite(p) ? "–" : pct.format(p);
 }
 
+const pctSigne = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1, signDisplay: "exceptZero" });
+
+/** 0.15 → « +15 % », −0.04 → « −4 % » ; null → « – » (ROI, progression) */
+export function formatPctSigne(p: number | null): string {
+  return p === null || !Number.isFinite(p) ? "–" : pctSigne.format(Math.abs(p) < 0.0005 ? 0 : p);
+}
+
 /** 1.8512 → « 1,85 » ; null → « – » */
 export function formatNombre(n: number | null): string {
   return n === null || !Number.isFinite(n) ? "–" : nombre.format(n);

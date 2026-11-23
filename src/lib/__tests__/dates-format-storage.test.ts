@@ -80,7 +80,8 @@ describe("stockage / import JSON", () => {
   it("aller-retour export → import identique", () => {
     const j = jourVide("2026-11-20");
     j.matchs.foot[0] = "G";
-    j.paris[0] = { equipes: "PSG - OM", mise: 10, cote: 1.8, resultat: "G" };
+    j.paris[0] = { equipes: "PSG - OM", mise: 10, cote: 1.8, resultat: "G", sport: "foot" };
+    j.mouvements = [{ id: "a", type: "depot", montant: 100, note: "Départ" }];
     const data = { version: 1 as const, dateDebut: "2026-11-18", jours: { "2026-11-20": j } };
     expect(importerJSON(exporterJSON(data))).toEqual(data);
   });
@@ -91,7 +92,8 @@ describe("stockage / import JSON", () => {
       jours: {
         "2026-11-20": {
           matchs: { foot: ["g", "X", "P"], inconnu: ["G"] },
-          paris: [{ equipes: 3, mise: "12,5", cote: "abc", resultat: "g" }],
+          paris: [{ equipes: 3, mise: "12,5", cote: "abc", resultat: "g", sport: "curling" }],
+          mouvements: [{ type: "retrait", montant: "20" }, { type: "inconnu", montant: 5 }, { type: "depot", montant: -3 }],
           type: "Combiné",
           miseCombine: "5",
         },
@@ -105,7 +107,8 @@ describe("stockage / import JSON", () => {
     expect(j.matchs.foot).toEqual(["G", "", "P", "", ""]);
     expect(j.matchs.volley).toEqual(["", "", "", "", ""]);
     expect(j.paris).toHaveLength(5);
-    expect(j.paris[0]).toEqual({ equipes: "", mise: 12.5, cote: null, resultat: "G" });
+    expect(j.paris[0]).toEqual({ equipes: "", mise: 12.5, cote: null, resultat: "G", sport: "" });
+    expect(j.mouvements).toEqual([{ id: "m0", type: "retrait", montant: 20, note: "" }]);
     expect(j.type).toBe("combine");
     expect(j.miseCombine).toBe(5);
   });

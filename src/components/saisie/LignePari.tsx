@@ -3,6 +3,7 @@
 import WarningAmberRounded from "@mui/icons-material/WarningAmberRounded";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
+import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -10,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useId } from "react";
 import { beneficePariSimple, pariSansCote } from "@/lib/calculs";
 import { formatEuro } from "@/lib/format";
-import type { Pari, Resultat } from "@/lib/types";
+import { type Pari, type Resultat, type SportPariId, SPORTS_PARIS } from "@/lib/types";
 import { styleStatut } from "@/theme/statuts";
 import { ChampNombre, Montant, masqueVisuel } from "../ui";
 
@@ -92,7 +93,7 @@ export function LignePari({
           },
         }}
       >
-        <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" } }}>
+        <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" }, display: "grid", gap: 1.5, gridTemplateColumns: "minmax(0,1fr) 8rem" }}>
           <TextField
             label="Équipes / pari"
             fullWidth
@@ -100,6 +101,20 @@ export function LignePari({
             value={pari.equipes}
             onChange={(e) => maj({ equipes: e.target.value })}
           />
+          <TextField
+            select
+            label="Sport"
+            fullWidth
+            value={pari.sport}
+            onChange={(e) => maj({ sport: e.target.value as SportPariId | "" })}
+          >
+            <MenuItem value="">–</MenuItem>
+            {SPORTS_PARIS.map((s) => (
+              <MenuItem key={s.id} value={s.id}>
+                {s.nom}
+              </MenuItem>
+            ))}
+          </TextField>
         </Box>
         {!combine && <ChampNombre libelle="Mise" suffixe="€" valeur={pari.mise} onChange={(mise) => maj({ mise })} />}
         <ChampNombre libelle="Cote" valeur={pari.cote} onChange={(cote) => maj({ cote })} />
