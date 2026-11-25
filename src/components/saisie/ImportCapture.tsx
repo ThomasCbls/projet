@@ -33,7 +33,7 @@ import {
   appliquerImport,
   verifierImport,
 } from "@/lib/lectureCapture";
-import { type SportPariId, type TypeJour, SPORTS_PARIS } from "@/lib/types";
+import { type SportPariId, type TypeJour, NB_PARIS_MAX, SPORTS_PARIS } from "@/lib/types";
 import { ChampNombre } from "../ui";
 import { ChoixResultat } from "./LignePari";
 
@@ -392,6 +392,7 @@ export function ImportCapture({ date, allerA }: { date: string; allerA: (d: stri
                   >
                     <TextField
                       label={combine ? `Sélection ${i + 1}` : "Équipes / pari"}
+                      multiline
                       value={s.equipes}
                       onChange={(e) => majSelection(i, { equipes: e.target.value })}
                       sx={siDouteux(s.equipes.trim() === "")}
@@ -434,7 +435,7 @@ export function ImportCapture({ date, allerA }: { date: string; allerA: (d: stri
                     size="small"
                     startIcon={<AddRounded />}
                     onClick={() => modifier(null, { selections: [...brouillon.selections, selectionVide()] })}
-                    disabled={brouillon.selections.length >= 5}
+                    disabled={brouillon.selections.length >= NB_PARIS_MAX}
                     sx={{ justifySelf: "start" }}
                   >
                     Ajouter une sélection

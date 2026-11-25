@@ -1,5 +1,6 @@
 "use client";
 
+import AddRounded from "@mui/icons-material/AddRounded";
 import ChevronLeftRounded from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import TodayRounded from "@mui/icons-material/TodayRounded";
@@ -19,7 +20,7 @@ import { useDonnees } from "@/hooks/useDonnees";
 import { resumeJour, statsParisJour } from "@/lib/calculs";
 import { ajouterJours, aujourdhuiIso, bornerDate, estDateIso, finPeriode } from "@/lib/dates";
 import { formatDateCourte, formatDateLongue, formatNombre } from "@/lib/format";
-import { type Jour, type Pari, type Resultat, type SportId, type TypeJour, SPORTS } from "@/lib/types";
+import { type Jour, type Pari, type Resultat, type SportId, type TypeJour, NB_PARIS_MAX, SPORTS, pariVide } from "@/lib/types";
 import { RappelRisques } from "../Marque";
 import { Chargement, ChampNombre, Montant, Section, masqueVisuel } from "../ui";
 import { CarteSport } from "./CarteSport";
@@ -54,6 +55,8 @@ export function SaisieJour() {
   const setMatch = (sport: SportId, i: number, v: Resultat) =>
     maj((j) => ({ ...j, matchs: { ...j.matchs, [sport]: j.matchs[sport].map((c, k) => (k === i ? v : c)) } }));
   const setPari = (i: number, p: Pari) => maj((j) => ({ ...j, paris: j.paris.map((x, k) => (k === i ? p : x)) }));
+  const ajouterPari = () => maj((j) => ({ ...j, paris: [...j.paris, pariVide()] }));
+  const supprimerPari = (i: number) => maj((j) => ({ ...j, paris: j.paris.filter((_, k) => k !== i) }));
   const combine = jour.type === "combine";
   const stats = statsParisJour(jour);
   const hors = demande !== null && estDateIso(demande) && demande !== date;
@@ -217,10 +220,25 @@ export function SaisieJour() {
         <Grid container spacing={1.5}>
           {jour.paris.map((p, i) => (
             <Grid key={i} size={{ xs: 12, xl: 6 }}>
-              <LignePari numero={i + 1} pari={p} combine={combine} onChange={(np) => setPari(i, np)} />
+              <LignePari
+                numero={i + 1}
+                pari={p}
+                combine={combine}
+                onChange={(np) => setPari(i, np)}
+                onSupprimer={jour.paris.length > 1 ? () => supprimerPari(i) : undefined}
+              />
             </Grid>
           ))}
         </Grid>
+        <Button
+          variant="outlined"
+          startIcon={<AddRounded />}
+          onClick={ajouterPari}
+          disabled={jour.paris.length >= NB_PARIS_MAX}
+          sx={{ mt: 1.5 }}
+        >
+          {combine ? "Ajouter une sélection" : "Ajouter un pari"}
+        </Button>
       </Box>
 
       {/* Récap */}

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { type PariAImporter, analyserTexteCapture, appliquerImport, devinerSport, lireNombre } from "@/lib/lectureCapture";
-import { type Jour, jourVide } from "@/lib/types";
+import { type Jour, NB_PARIS_MAX, jourVide, pariVide } from "@/lib/types";
 
 const AUJOURDHUI = "2026-11-23";
+const MATCH_UNIBET = "Ludogorets - Dunav Rousse\nNombre de tirs cadrés 3 ou plus - Dunav Rousse - 90 Mins : Oui";
 
 /** Sortie réelle de Tesseract (fra, PSM 11, image inversée et seuillée) sur une capture Unibet. */
 const UNIBET_PSM11 = `FENDEZ VOUS SUR JOUEURS INFO-SERVICEFR (09 74 75 13 13
@@ -114,7 +115,7 @@ describe("analyserTexteCapture", () => {
       cote: 1.75,
       gain: 8.75,
       resultat: "G",
-      selections: [{ equipes: "Ludogorets - Dunav Rousse", sport: "foot", cote: null }],
+      selections: [{ equipes: MATCH_UNIBET, sport: "foot", cote: null }],
     });
     expect(p.aVerifier).toEqual([]);
   });
@@ -126,8 +127,12 @@ describe("analyserTexteCapture", () => {
       mise: 5,
       cote: 1.75,
       resultat: "G",
-      selections: [{ equipes: "Ludogorets - Dunav Rousse", sport: "foot" }],
+      selections: [{ sport: "foot" }],
     });
+    // Description lue sous le match, sans le bruit OCR qui suit (« 22200 », « te »).
+    expect(p.selections[0].equipes).toMatch(
+      /^Ludogorets - Dunav Rousse\nNombre de tirs cadrés 3 ou plus - Dunav Rousse - 90 Mins : [OQ]ui$/,
+    );
   });
 
   it("pari perdu, confusions S/O, sport deviné par la compétition", () => {
@@ -137,7 +142,7 @@ describe("analyserTexteCapture", () => {
       mise: 5,
       cote: 2.1,
       resultat: "P",
-      selections: [{ equipes: "Sinner - Alcaraz", sport: "tennis" }],
+      selections: [{ equipes: "Sinner - Alcaraz\nVainqueur du match : Sinner", sport: "tennis" }],
     });
   });
 
@@ -145,8 +150,8 @@ describe("analyserTexteCapture", () => {
     const p = analyserTexteCapture(COMBINE, AUJOURDHUI);
     expect(p).toMatchObject({ type: "combine", date: "2026-11-24", mise: 10, cote: 2.1, resultat: "G" });
     expect(p.selections).toEqual([
-      { equipes: "PSG - OM", cote: 1.5, sport: "foot" },
-      { equipes: "Lakers - Celtics", cote: 1.4, sport: "basket" },
+      { equipes: "PSG - OM\nRésultat du match : PSG", cote: 1.5, sport: "foot" },
+      { equipes: "Lakers - Celtics\nVainqueur : Lakers", cote: 1.4, sport: "basket" },
     ]);
   });
 
@@ -209,10 +214,24 @@ describe("appliquerImport", () => {
     expect(res.paris[1]).toEqual({ equipes: "Ludogorets - Dunav Rousse", sport: "foot", mise: 5, cote: 1.75, resultat: "G" });
   });
 
-  it("simple : refusé si tous les paris sont remplis", () => {
+  it("simple : ajouté à la suite si tous les paris sont remplis", () => {
     const j = jourVide(AUJOURDHUI);
     j.paris = j.paris.map((p) => ({ ...p, mise: 1 }));
+    const res = ok(appliquerImport(j, simple));
+    expect(res.paris).toHaveLength(j.paris.length + 1);
+    expect(res.paris.at(-1)?.cote).toBe(1.75);
+  });
+
+  it("simple : refusé au-delà du nombre maximal de paris", () => {
+    const j = jourVide(AUJOURDHUI);
+    j.paris = Array.from({ length: NB_PARIS_MAX }, () => ({ ...pariVide(), mise: 1 }));
     expect(appliquerImport(j, simple)).toHaveProperty("erreur");
+  });
+
+  it("combiné : plus de sélections que d'emplacements libres", () => {
+    const selections = Array.from({ length: 7 }, (_, k) => ({ equipes: `E${k}`, sport: "" as const, cote: 1.1 }));
+    const res = ok(appliquerImport(jourVide(AUJOURDHUI), { type: "combine", mise: 2, cote: 1.95, resultat: "", selections }));
+    expect(res.paris.map((p) => p.equipes)).toEqual(selections.map((s) => s.equipes));
   });
 
   it("simple : refusé sur un jour en combiné déjà saisi", () => {

@@ -10,7 +10,7 @@ import {
   parseNombre,
 } from "@/lib/format";
 import { ErreurImport, exporterJSON, importerJSON, normaliserDonnees } from "@/lib/storage";
-import { jourVide } from "@/lib/types";
+import { NB_PARIS_DEFAUT, NB_PARIS_MAX, jourVide } from "@/lib/types";
 
 /** Intl utilise des espaces insécables : on les normalise pour comparer. */
 const espaces = (s: string) => s.replace(/[  ]/g, " ");
@@ -106,11 +106,21 @@ describe("stockage / import JSON", () => {
     const j = d.jours["2026-11-20"];
     expect(j.matchs.foot).toEqual(["G", "", "P", "", ""]);
     expect(j.matchs.volley).toEqual(["", "", "", "", ""]);
-    expect(j.paris).toHaveLength(5);
-    expect(j.paris[0]).toEqual({ equipes: "", mise: 12.5, cote: null, resultat: "G", sport: "" });
+    expect(j.paris).toEqual([{ equipes: "", mise: 12.5, cote: null, resultat: "G", sport: "" }]);
     expect(j.mouvements).toEqual([{ id: "m0", type: "retrait", montant: 20, note: "" }]);
     expect(j.type).toBe("combine");
     expect(j.miseCombine).toBe(5);
+  });
+
+  it("nombre de paris variable : conservé, borné, jamais nul", () => {
+    const pari = (mise: number) => ({ equipes: "", mise, cote: 2, resultat: "", sport: "" });
+    const charger = (paris: unknown) =>
+      normaliserDonnees({ jours: { "2026-11-20": { paris, mouvements: [{ type: "depot", montant: 1 }] } } }).jours["2026-11-20"]
+        .paris;
+    expect(charger(Array.from({ length: 8 }, (_, k) => pari(k + 1))).map((p) => p.mise)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(charger(Array.from({ length: NB_PARIS_MAX + 10 }, () => pari(1)))).toHaveLength(NB_PARIS_MAX);
+    expect(charger([])).toHaveLength(NB_PARIS_DEFAUT);
+    expect(charger("pas un tableau")).toHaveLength(NB_PARIS_DEFAUT);
   });
 
   it("refuse un fichier non reconnu", () => {

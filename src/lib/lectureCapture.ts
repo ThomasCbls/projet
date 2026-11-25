@@ -8,7 +8,7 @@
  */
 import { dateExcel, estDateIso } from "./dates";
 import { parseNombre } from "./format";
-import { type Jour, type Pari, type Resultat, type SportPariId, type TypeJour, pariEstVide } from "./types";
+import { type Jour, type Pari, type Resultat, type SportPariId, type TypeJour, NB_PARIS_MAX, pariEstVide } from "./types";
 
 export type ChampCapture = "date" | "mise" | "cote" | "resultat" | "equipes" | "sport";
 
@@ -242,6 +242,30 @@ function estLigneParasite(normalisee: string): boolean {
   );
 }
 
+/** Bruit OCR (icône, logo, « UE », « 22200 ») : aucun mot d'au moins trois lettres. */
+const estBruit = (ligne: string) => !/\p{L}{3}/u.test(ligne);
+
+/**
+ * Description du pari (marché et choix) sous le match, qui peut tenir sur plusieurs lignes :
+ * « Nombre de tirs cadrés 3 ou plus - Dunav Rousse - 90 / Mins : Oui ».
+ * S'arrête à la sélection suivante, au type de pari ou au bloc mise/cote.
+ */
+function lireDescription(brutes: string[], lignes: string[], debut: number): string {
+  const morceaux: string[] = [];
+  for (let k = debut; k < lignes.length && morceaux.length < 3; k++) {
+    const l = lignes[k];
+    if (ENTETE_COMPETITION.test(l) || LIGNE_TYPE.test(l) || /\bMISE\b|\bCOTE\b/.test(l) || RE_GAGNE.test(l) || RE_PERDU.test(l))
+      break;
+    if (estBruit(brutes[k])) continue;
+    morceaux.push(brutes[k].replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N})]+$/gu, ""));
+  }
+  return morceaux.join(" ").replace(/\s+/g, " ");
+}
+
+/** Équipes, puis description du pari en dessous. */
+const avecDescription = (equipes: string, description: string) =>
+  description === "" ? equipes : `${equipes}\n${description}`;
+
 function lireSelections(brutes: string[], lignes: string[]): SelectionDetectee[] {
   const selections: SelectionDetectee[] = [];
   lignes.forEach((l, k) => {
@@ -255,7 +279,7 @@ function lireSelections(brutes: string[], lignes: string[]): SelectionDetectee[]
       const suite = lignes.slice(m, m + 3);
       const fin = suite.findIndex((x) => ENTETE_COMPETITION.test(x));
       const sport = devinerSport(l) || devinerSport((fin < 0 ? suite : suite.slice(0, fin)).join(" "));
-      selections.push({ equipes, cote, sport });
+      selections.push({ equipes: avecDescription(equipes, lireDescription(brutes, lignes, m + 1)), cote, sport });
       return;
     }
   });
@@ -265,7 +289,11 @@ function lireSelections(brutes: string[], lignes: string[]): SelectionDetectee[]
   const k = lignes.findIndex((l, i) => SEPARATEUR_EQUIPES.test(brutes[i]) && !estLigneParasite(l));
   if (k >= 0) {
     const { equipes, cote } = nettoyerEquipes(brutes[k]);
-    selections.push({ equipes, cote, sport: devinerSport(lignes.join(" ")) });
+    selections.push({
+      equipes: avecDescription(equipes, lireDescription(brutes, lignes, k + 1)),
+      cote,
+      sport: devinerSport(lignes.join(" ")),
+    });
   }
   return selections;
 }
@@ -359,19 +387,21 @@ export function appliquerImport(jour: Jour, p: PariAImporter): { jour: Jour } | 
   if (p.type === "simple") {
     if (jour.type === "combine" && dejaSaisi)
       return { erreur: "Ce jour contient déjà un combiné : impossible d'y ajouter un pari simple." };
-    const i = jour.paris.findIndex(pariEstVide);
-    if (i < 0) return { erreur: "Les paris de ce jour sont déjà tous remplis." };
     const s = p.selections[0];
     const pari: Pari = { equipes: s.equipes.trim(), sport: s.sport, mise: p.mise, cote: p.cote, resultat: p.resultat };
-    return { jour: { ...jour, type: "simple", paris: jour.paris.map((x, k) => (k === i ? pari : x)) } };
+    // Premier emplacement vide, sinon un pari de plus.
+    const i = jour.paris.findIndex(pariEstVide);
+    if (i >= 0) return { jour: { ...jour, type: "simple", paris: jour.paris.map((x, k) => (k === i ? pari : x)) } };
+    if (jour.paris.length >= NB_PARIS_MAX) return { erreur: `Un jour peut compter au plus ${NB_PARIS_MAX} paris.` };
+    return { jour: { ...jour, type: "simple", paris: [...jour.paris, pari] } };
   }
 
   if (dejaSaisi) return { erreur: "Ce jour contient déjà des paris : un combiné ne peut être importé que sur un jour vide." };
-  if (p.selections.length > jour.paris.length)
-    return { erreur: `Un combiné peut compter au plus ${jour.paris.length} sélections.` };
-  const paris = jour.paris.map((x, k): Pari => {
-    const s = p.selections[k];
-    return s ? { equipes: s.equipes.trim(), sport: s.sport, mise: null, cote: s.cote, resultat: p.resultat } : x;
-  });
+  if (p.selections.length > NB_PARIS_MAX) return { erreur: `Un combiné peut compter au plus ${NB_PARIS_MAX} sélections.` };
+  const selections = p.selections.map(
+    (s): Pari => ({ equipes: s.equipes.trim(), sport: s.sport, mise: null, cote: s.cote, resultat: p.resultat }),
+  );
+  // Les emplacements vides restants sont conservés après les sélections.
+  const paris = [...selections, ...jour.paris.slice(selections.length)];
   return { jour: { ...jour, type: "combine", miseCombine: p.mise, paris } };
 }

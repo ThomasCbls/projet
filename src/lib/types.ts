@@ -31,7 +31,10 @@ export function nomSportPari(id: SportPariId): string {
 }
 
 export const NB_MATCHS_PAR_SPORT = 5;
-export const NB_PARIS_PAR_JOUR = 5;
+/** Emplacements de paris proposés sur un jour neuf (on peut en ajouter ou en retirer). */
+export const NB_PARIS_DEFAUT = 5;
+/** Garde-fou : nombre maximal de paris sur un même jour. */
+export const NB_PARIS_MAX = 50;
 
 export interface Pari {
   equipes: string;
@@ -104,7 +107,7 @@ export function jourVide(date: string): Jour {
   return {
     date,
     matchs,
-    paris: Array.from({ length: NB_PARIS_PAR_JOUR }, pariVide),
+    paris: Array.from({ length: NB_PARIS_DEFAUT }, pariVide),
     type: "simple",
     miseCombine: null,
     mouvements: [],

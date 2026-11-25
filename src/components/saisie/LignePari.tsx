@@ -1,12 +1,15 @@
 "use client";
 
+import DeleteOutlineRounded from "@mui/icons-material/DeleteOutlineRounded";
 import WarningAmberRounded from "@mui/icons-material/WarningAmberRounded";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
+import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useId } from "react";
 import { beneficePariSimple, pariSansCote } from "@/lib/calculs";
@@ -62,11 +65,14 @@ export function LignePari({
   pari,
   combine,
   onChange,
+  onSupprimer,
 }: {
   numero: number;
   pari: Pari;
   combine: boolean;
   onChange: (p: Pari) => void;
+  /** Absent : le pari ne peut pas être retiré (dernier pari du jour). */
+  onSupprimer?: () => void;
 }) {
   const maj = (champ: Partial<Pari>) => onChange({ ...pari, ...champ });
   const titre = combine ? `Sélection ${numero}` : `Pari ${numero}`;
@@ -76,11 +82,18 @@ export function LignePari({
       <Box component="legend" sx={masqueVisuel}>
         {titre}
       </Box>
-      <Box sx={{ mb: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-        <Typography aria-hidden="true" variant="subtitle2">
+      <Box sx={{ mb: 1.5, minHeight: 32, display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography aria-hidden="true" variant="subtitle2" sx={{ flexGrow: 1 }}>
           {titre}
         </Typography>
         {!combine && pari.resultat !== "" && <Montant valeur={beneficePariSimple(pari)} sx={{ fontWeight: 700 }} />}
+        {onSupprimer && (
+          <Tooltip title="Supprimer">
+            <IconButton size="small" edge="end" aria-label={`Supprimer ${titre.toLowerCase()}`} onClick={onSupprimer}>
+              <DeleteOutlineRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
       <Box
         sx={{
@@ -97,6 +110,7 @@ export function LignePari({
           <TextField
             label="Équipes / pari"
             fullWidth
+            multiline
             placeholder="Ex. PSG – OM"
             value={pari.equipes}
             onChange={(e) => maj({ equipes: e.target.value })}

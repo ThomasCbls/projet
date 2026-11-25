@@ -16,7 +16,7 @@ import {
   type TypeMouvement,
   DATE_DEBUT_DEFAUT,
   NB_MATCHS_PAR_SPORT,
-  NB_PARIS_PAR_JOUR,
+  NB_PARIS_MAX,
   SPORTS,
   TYPES_MOUVEMENT,
   donneesVides,
@@ -127,8 +127,9 @@ export function normaliserJour(date: string, v: unknown): Jour {
     const cases = Array.isArray(matchs[s.id]) ? (matchs[s.id] as unknown[]) : [];
     base.matchs[s.id] = Array.from({ length: NB_MATCHS_PAR_SPORT }, (_, i) => normResultat(cases[i]));
   }
-  const paris = Array.isArray(v.paris) ? v.paris : [];
-  base.paris = Array.from({ length: NB_PARIS_PAR_JOUR }, (_, i) => normPari(paris[i]));
+  // Nombre de paris variable : on garde ceux enregistrés (au moins un, au plus NB_PARIS_MAX).
+  const paris = Array.isArray(v.paris) ? v.paris.slice(0, NB_PARIS_MAX).map(normPari) : [];
+  if (paris.length > 0) base.paris = paris;
   const type = typeof v.type === "string" ? v.type.toLowerCase() : "";
   base.type = type === "combine" || type === "combiné" ? "combine" : "simple";
   base.miseCombine = normNombre(v.miseCombine);
